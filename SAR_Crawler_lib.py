@@ -237,6 +237,30 @@ class SAR_Wiki_Crawler:
             total_files = math.ceil(document_limit / batch_size)
 
         # COMPLETAR
+        ### ADE
+        # Itero mientras la cola no este vacia
+        while len(queue) > 0:
+            # Obtengo el primer elemento de la cola y lo elimino
+            q = queue.pop(0)
+            
+            # De dicho elemento obtengo la URL a visitar y la profundidad
+            depth = q[0]
+            url = q[2]
+            
+            # Añado la URL a la lista de URLs visitadas
+            visited.append(url)
+            
+            # Obtengo el contenido plano en texto y las URL de la URL a visitar
+            text, list = self.get_wikipedia_entry_content(url)
+            
+            # Itero cada URL obtenida de la pagina
+            for l in list:
+                # Si la URL es valida y la profundidad es menor que la profundidad maxima, añado los hijos a la cola
+                if self.is_valid_url(l) & depth < max_depth_level:
+                    queue.append((depth+1,url,l))
+            hq.heapify(queue)
+            ### FIN ADE
+        
 
 
     def wikipedia_crawling_from_url(self,
