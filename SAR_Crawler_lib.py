@@ -138,6 +138,7 @@ class SAR_Wiki_Crawler:
         Returns:
 
             Optional[Dict[str, Union[str,List[Dict[str,Union[str,List[str,str]]]]]]]:
+            #el diccionario tiene claves del tipo str, y sus contenidos pueden ser del tipo str o lista de diccionarios
 
             devuelve un diccionario con las claves 'url', 'title', 'summary', 'sections':
                 Los valores asociados a 'url', 'title' y 'summary' son cadenas,
@@ -152,8 +153,27 @@ class SAR_Wiki_Crawler:
         """
         def clean_text(txt):
             return '\n'.join(l for l in txt.split('\n') if len(l) > 0)
+        #creamos el diccionario a devolver
+        document = {}
 
-        document = None
+        #comprobamos si algun elemento en el documento coincide con el patrón del titulo
+        match = self.title_sum_re.match(text).groupdict()
+        #en caso negativp se devuelve None
+        if not match:
+            return None
+        #en cualquier otro caso se asigna cada elemento a su respectiva vaiable y se añaden al diccionario
+        title = match['title']
+        
+        summ =  match['summary']
+
+        document={
+            "url": url,
+            "title": title,
+            "summary":summ
+        }
+        
+        
+
 
         # COMPLETAR
 
