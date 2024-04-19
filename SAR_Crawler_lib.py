@@ -153,6 +153,9 @@ class SAR_Wiki_Crawler:
         """
         def clean_text(txt):
             return '\n'.join(l for l in txt.split('\n') if len(l) > 0)
+        
+        # COMPLETAR
+        # IVAN
         #creamos el diccionario a devolver
         document = {}
 
@@ -171,11 +174,6 @@ class SAR_Wiki_Crawler:
             "title": title,
             "summary":summ
         }
-        
-        
-
-
-        # COMPLETAR
 
         return document
 
