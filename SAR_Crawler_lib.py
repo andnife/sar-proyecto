@@ -158,6 +158,9 @@ class SAR_Wiki_Crawler:
         """
         def clean_text(txt):
             return '\n'.join(l for l in txt.split('\n') if len(l) > 0)
+        
+        # COMPLETAR
+        # IVAN
         #creamos el diccionario a devolver
         document = {}
 
@@ -301,8 +304,6 @@ class SAR_Wiki_Crawler:
             depth = q[0]
             url = q[2]
             
-            # Añado la URL a la lista de URLs visitadas
-            visited.append(url)
             
             # Obtengo el contenido plano en texto y las URL de la URL a visitar
             text, list = self.get_wikipedia_entry_content(url)
@@ -313,6 +314,10 @@ class SAR_Wiki_Crawler:
                 if self.is_valid_url(l) & depth < max_depth_level:
                     queue.append((depth+1,url,l))
             hq.heapify(queue)
+
+            # Añado la URL a la lista de URLs visitadas
+            if url not in visited:
+                visited.append(url)
             ### FIN ADE
         
 
