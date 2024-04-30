@@ -150,6 +150,11 @@ class SAR_Wiki_Crawler:
 
             en caso de no encontrar título o resúmen del artículo, devolverá None
 
+        self.title_sum_re = re.compile(r"##(?P<title>.+)##\n(?P<summary>((?!==.+==).+|\n)+)(?P<rest>(.+|\n)*)")
+        self.sections_re = re.compile(r"==.+==\n")
+        self.section_re = re.compile(r"==(?P<name>.+)==\n(?P<text>((?!--.+--).+|\n)*)(?P<rest>(.+|\n)*)")
+        self.subsections_re = re.compile(r"--.+--\n")
+        self.subsection_re = re.compile(r"--(?P<name>.+)--\n(?P<text>(.+|\n)*)")
         """
         def clean_text(txt):
             return '\n'.join(l for l in txt.split('\n') if len(l) > 0)
@@ -158,7 +163,7 @@ class SAR_Wiki_Crawler:
 
         #comprobamos si algun elemento en el documento coincide con el patrón del titulo
         match = self.title_sum_re.match(text).groupdict()
-        #en caso negativp se devuelve None
+        #en caso negativo se devuelve None
         if not match:
             return None
         #en cualquier otro caso se asigna cada elemento a su respectiva vaiable y se añaden al diccionario
@@ -169,12 +174,41 @@ class SAR_Wiki_Crawler:
         document={
             "url": url,
             "title": title,
-            "summary":summ
+            "summary":summ,
+            "sections":[]
         }
-        
-        
+        #Miramos el resto del documento
+        x = match['rest']
 
+        #Si no tiene secciones se retorna el diccionario actual
+        if not match:
+            return document
+        #Si el documento tiene secciones, se analizaran.
+        else:
+            all = self.sections_re.findall(x)
+            for i in all:
+                match = self.section_re.match(i).groupdict()
+                name = match['name']
+                text = match['text']
+                rest = match['rest']
+            if document["sections"][i] not in document["sections"]:
+                document["sections"][i]={
+                    "name" : name,
+                    "text" : text,
+                    "subsections" : []
+                }
+                all1 = self.subsections_re.findall(rest)
+                for j in all1:
+                    match = self.subsection_re.match(j).groupdict()
+                    name = match['name']
+                    text = match['text']
+                    if document["sections"][i][j] not in document["sections"][i]:
+                        document["sections"][i][j]={
+                            "name":name,
+                            "text":text
+                        }
 
+                
         # COMPLETAR
 
         return document
