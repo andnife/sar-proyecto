@@ -256,6 +256,8 @@ class SAR_Wiki_Crawler:
 
         # COMPLETAR
         ### ADE
+        batch_text = ''
+        batch_count = 0
         # Itero mientras la cola no este vacia
         while len(queue) > 0:
             # Obtengo el primer elemento de la cola y lo elimino
@@ -264,7 +266,6 @@ class SAR_Wiki_Crawler:
             # De dicho elemento obtengo la URL a visitar y la profundidad
             depth = q[0]
             url = q[2]
-            
             
             # Obtengo el contenido plano en texto y las URL de la URL a visitar
             text, list = self.get_wikipedia_entry_content(url)
@@ -280,7 +281,24 @@ class SAR_Wiki_Crawler:
             if url not in visited:
                 visited.append(url)
             ### FIN ADE
-        
+            # ALVARO
+            # Llamar a conversor texto ->JSON
+            batch_text += self.parse_wikipedia_textual_content(text,url)
+            batch_count += 1
+            if (batch_count < batch_size):
+                batch_text += '\n'
+            else:
+                with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
+                    batch.write(batch_text)
+                batch_text = ''
+                batch_count = 0
+                files_count += 1
+            
+            # Hacer batches en funcion a formato de nombres dado y batch actual
+            # Añadir a documents los documentos que visitemos de visited
+            # Cuando llegues al cupo del batch o no queden mas docs por ver, creas el file y lo escribes
+            # FIN ALVARO
+
 
 
     def wikipedia_crawling_from_url(self,
