@@ -211,8 +211,7 @@ class SAR_Wiki_Crawler:
                             "text":text
                         }
 
-                
-        # COMPLETAR
+        # FIN IVAN
 
         return document
 
@@ -325,19 +324,23 @@ class SAR_Wiki_Crawler:
             batch_text += self.parse_wikipedia_textual_content(text,url)
             batch_count += 1
             if (batch_count < batch_size):
+                # Mientras el batch no este completo, añado una fila por cada artículo
                 batch_text += '\n'
             else:
+                # Hago batches en funcion a formato de nombres dado y batch actual
                 with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
                     batch.write(batch_text)
                 batch_text = ''
                 batch_count = 0
                 files_count += 1
             
-            # Hacer batches en funcion a formato de nombres dado y batch actual
-            # Añadir a documents los documentos que visitemos de visited
-            # Cuando llegues al cupo del batch o no queden mas docs por ver, creas el file y lo escribes
-            # FIN ALVARO
-
+        # Cuando llegues al cupo del batch o no queden mas docs por ver, creas el file y lo escribes
+        if batch_count != 0:
+            # Hago batch con el texto lo restante
+            with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
+                batch.write(batch_text)
+            files_count += 1
+        # FIN ALVARO
 
 
     def wikipedia_crawling_from_url(self,
