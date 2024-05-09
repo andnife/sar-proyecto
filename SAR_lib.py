@@ -232,21 +232,36 @@ class SAR_Indexer:
 
 
         """
+
+        
+        docId = len(self.docs) + 1
+        self.docs[docId] = filename
+
         for i, line in enumerate(open(filename)):
             j = self.parse_article(line)
+            if self.already_in_index(j):
+                continue
+            artId = len(self.articles) + 1
+            self.articles[artId] = (j['url'], j['title'], j['all'])
 
+            content = j[all]
+            tokens = enumerate(self.tokenize(content))
 
-        #
-        # 
-        # En la version basica solo se debe indexar el contenido "article"
-        #
-        #
-        #
-        #################
-        ### COMPLETAR ###
-        #################
-
-
+            for token in tokens:
+                term = token.lower()
+                if term not in self.index:
+                    self.index[term] = []
+                if artId not in self.index[term]:
+                    self.index[term].append(artId)
+                self.urls.add(j['url'])
+            
+            # Invert index convertion
+            terms = sorted(self.index.keys())
+            invertedIndex = {}
+            for t in terms:
+                invertedIndex[t] = self.index[t]
+            
+            self.index = invertedIndex
 
     def set_stemming(self, v:bool):
         """
