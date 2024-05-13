@@ -444,17 +444,17 @@ class SAR_Indexer:
         """
         
         stem = self.stemmer.stem(term)
-
-        if stem not in self.sindex:
-            return[]
-        terms = list(self.sindex[stem])
         res = []
 
-        for term in range(len(terms)):
-            terms[term] = self.index[terms[term]]
+        if stem not in self.sindex:
+            return res
+        terms = list(self.sindex[stem])
 
-        for term in range(len(terms)):
-            res = self.or_posting(res, terms[term])
+        for t in range(len(terms)):
+            terms[t] = self.index[terms[t]]
+
+        for t in range(len(terms)):
+            res = self.or_posting(res, terms[t])
         
         return res
 
