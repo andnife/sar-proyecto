@@ -308,7 +308,7 @@ class SAR_Indexer:
         terms = list(self.index.keys())
         for term in terms:
             stemmed = self.stemmer.stem(term)
-            if stemmed in self.sindex:
+            if stemmed not in self.sindex:
                 self.sindex[stemmed] = [term]
             else:
                 self.sindex[stemmed].append(term)
