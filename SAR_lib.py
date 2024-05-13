@@ -305,10 +305,13 @@ class SAR_Indexer:
 
         """
         
-        pass
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+        terms = list(self.index.keys())
+        for term in terms:
+            stemmed = self.stemmer.stem(term)
+            if stemmed not in self.sindex:
+                self.sindex[stemmed] = [term]
+            else:
+                self.sindex[stemmed].append(term)
 
 
     
@@ -442,9 +445,18 @@ class SAR_Indexer:
         
         stem = self.stemmer.stem(term)
 
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+        if stem not in self.sindex:
+            return[]
+        terms = list(self.sindex[stem])
+        res = []
+
+        for term in range(len(terms)):
+            terms[term] = self.index[terms[term]]
+
+        for term in range(len(terms)):
+            res = self.or_posting(res, terms[term])
+        
+        return res
 
     def get_permuterm(self, term:str, field:Optional[str]=None):
         """
