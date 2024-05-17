@@ -178,11 +178,11 @@ class SAR_Indexer:
             self.index_file(root)
         elif file_or_dir.is_dir():
             # is a directory
-            for d, _, files in os.walk(root):
+            for d, _, files in os.walk(root): #explora la ruta del directorio
                 for filename in sorted(files):
                     if filename.endswith('.json'):
-                        fullname = os.path.join(d, filename)
-                        self.index_file(fullname)
+                        fullname = os.path.join(d, filename) #crea la ruta del archivo
+                        self.index_file(fullname) #indexa el archivo con la ruta obtenida anteriormente
         else:
             print(f"ERROR:{root} is not a file nor directory!", file=sys.stderr)
             sys.exit(-1)
@@ -237,7 +237,7 @@ class SAR_Indexer:
         docId = len(self.docs) + 1
         self.docs[docId] = filename
 
-        for i, line in enumerate(open(filename)):
+        for line in enumerate(open(filename)):
             j = self.parse_article(line)
             if self.already_in_index(j):
                 continue
@@ -253,15 +253,15 @@ class SAR_Indexer:
                     self.index[term] = []
                 if artId not in self.index[term]:
                     self.index[term].append(artId)
-                self.urls.add(j['url'])
+            self.urls.add(j['url'])
             
-            # Invert index convertion
-            terms = sorted(self.index.keys())
-            invertedIndex = {}
-            for t in terms:
-                invertedIndex[t] = self.index[t]
+        # Invert index convertion
+        terms = sorted(self.index.keys())
+        invertedIndex = {}
+        for t in terms:
+            invertedIndex[t] = self.index[t]
             
-            self.index = invertedIndex
+        self.index = invertedIndex
 
     def set_stemming(self, v:bool):
         """
@@ -376,10 +376,22 @@ class SAR_Indexer:
         return: posting list con el resultado de la query
 
         """
+        #IVAN
 
         if query is None or len(query) == 0:
             return []
+        
+        terminos = self.tokenize(query)
 
+        res = []
+
+        for x in terminos:
+            if x in self.index:
+                docs=self.index[x]
+                if docs not in res:
+                    res.append(docs)
+
+        return res            
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
@@ -405,9 +417,19 @@ class SAR_Indexer:
         NECESARIO PARA TODAS LAS VERSIONES
 
         """
+        #IVAN
+
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
+        x = self.index
+
+        if term in x:
+            return self.index[term]
+        else:
+            return[]
+
+        #ampliar el metodo para aplicar las funcionalidades extra
         pass
 
 
