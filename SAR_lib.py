@@ -253,15 +253,15 @@ class SAR_Indexer:
                     self.index[term] = []
                 if artId not in self.index[term]:
                     self.index[term].append(artId)
-                self.urls.add(j['url'])
+            self.urls.add(j['url'])
             
-            # Invert index convertion
-            terms = sorted(self.index.keys())
-            invertedIndex = {}
-            for t in terms:
-                invertedIndex[t] = self.index[t]
+        # Invert index convertion
+        terms = sorted(self.index.keys())
+        invertedIndex = {}
+        for t in terms:
+            invertedIndex[t] = self.index[t]
             
-            self.index = invertedIndex
+        self.index = invertedIndex
 
     def set_stemming(self, v:bool):
         """
