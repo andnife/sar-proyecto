@@ -178,11 +178,11 @@ class SAR_Indexer:
             self.index_file(root)
         elif file_or_dir.is_dir():
             # is a directory
-            for d, _, files in os.walk(root):
+            for d, _, files in os.walk(root): #explora la ruta del directorio
                 for filename in sorted(files):
                     if filename.endswith('.json'):
-                        fullname = os.path.join(d, filename)
-                        self.index_file(fullname)
+                        fullname = os.path.join(d, filename) #crea la ruta del archivo
+                        self.index_file(fullname) #indexa el archivo con la ruta obtenida anteriormente
         else:
             print(f"ERROR:{root} is not a file nor directory!", file=sys.stderr)
             sys.exit(-1)
@@ -232,21 +232,36 @@ class SAR_Indexer:
 
 
         """
-        for i, line in enumerate(open(filename)):
+
+        
+        docId = len(self.docs) + 1
+        self.docs[docId] = filename
+
+        for line in enumerate(open(filename)):
             j = self.parse_article(line)
+            if self.already_in_index(j):
+                continue
+            artId = len(self.articles) + 1
+            self.articles[artId] = (j['url'], j['title'], j['all'])
 
+            content = j[all]
+            tokens = enumerate(self.tokenize(content))
 
-        #
-        # 
-        # En la version basica solo se debe indexar el contenido "article"
-        #
-        #
-        #
-        #################
-        ### COMPLETAR ###
-        #################
-
-
+            for token in tokens:
+                term = token.lower()
+                if term not in self.index:
+                    self.index[term] = []
+                if artId not in self.index[term]:
+                    self.index[term].append(artId)
+            self.urls.add(j['url'])
+            
+        # Invert index convertion
+        terms = sorted(self.index.keys())
+        invertedIndex = {}
+        for t in terms:
+            invertedIndex[t] = self.index[t]
+            
+        self.index = invertedIndex
 
     def set_stemming(self, v:bool):
         """
@@ -290,10 +305,13 @@ class SAR_Indexer:
 
         """
         
-        pass
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+        terms = list(self.index.keys())
+        for term in terms:
+            stemmed = self.stemmer.stem(term)
+            if stemmed not in self.sindex:
+                self.sindex[stemmed] = [term]
+            else:
+                self.sindex[stemmed].append(term)
 
 
     
@@ -358,10 +376,22 @@ class SAR_Indexer:
         return: posting list con el resultado de la query
 
         """
+        #IVAN
 
         if query is None or len(query) == 0:
             return []
+        
+        terminos = self.tokenize(query)
 
+        res = []
+
+        for x in terminos:
+            if x in self.index:
+                docs=self.index[x]
+                if docs not in res:
+                    res.append(docs)
+
+        return res            
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
@@ -387,9 +417,19 @@ class SAR_Indexer:
         NECESARIO PARA TODAS LAS VERSIONES
 
         """
+        #IVAN
+
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
+        x = self.index
+
+        if term in x:
+            return self.index[term]
+        else:
+            return[]
+
+        #ampliar el metodo para aplicar las funcionalidades extra
         pass
 
 
@@ -426,10 +466,19 @@ class SAR_Indexer:
         """
         
         stem = self.stemmer.stem(term)
+        res = []
 
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+        if stem not in self.sindex:
+            return res
+        terms = list(self.sindex[stem])
+
+        for t in range(len(terms)):
+            terms[t] = self.index[terms[t]]
+
+        for t in range(len(terms)):
+            res = self.or_posting(res, terms[t])
+        
+        return res
 
     def get_permuterm(self, term:str, field:Optional[str]=None):
         """
@@ -485,7 +534,8 @@ class SAR_Indexer:
         return: posting list con los artid incluidos en p1 y p2
 
         """
-        
+        res = {}
+        while 
         pass
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
