@@ -492,8 +492,20 @@ class SAR_Indexer:
         return: posting list con todos los artid exceptos los contenidos en p
 
         """
+        #IVAN
+        #creamos una variable con todos los documentos
+        x = self.index
+
+        #creamos otra variable con los documentos a eliminar
+        y= p.sort()
+
+        #recorremos ambas listas elminando los elementos de x que esten en p
+        for t in x:
+            for z in y:
+                if y[z] == x[t]:
+                    del x[t]
+        return x 
         
-        pass
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
@@ -512,6 +524,7 @@ class SAR_Indexer:
         return: posting list con los artid incluidos en p1 y p2
 
         """
+        #IVAN
         
         pass
         ########################################
@@ -532,6 +545,7 @@ class SAR_Indexer:
         return: posting list con los artid incluidos de p1 o p2
 
         """
+        #IVAN
 
         pass
         ########################################
