@@ -1,5 +1,5 @@
 [1.1] SAR_Crawler_lib.py
-	- parse_wikipedia_textual_content() {HECHO - IVAN}
+	- parse_wikipedia_textual_content() {FALTA TESTING - IVAN}
 	- start_crawling() {CASI HECHO - ALVARO y ADE}
 	
 
