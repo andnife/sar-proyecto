@@ -11,8 +11,8 @@ SAR_lib.py
 			++ make_stemming()
 			++ get_stemming()
 		[2.3] + multifield {ADJUDICADO - ALVARO}
-		[2.4] + busquedas posicionales
-		[2.5] + permumterm {ADE}
+		[2.4] + busquedas posicionales {SIN TERMINAR - ADE}
+		[2.5] + permumterm {FALTA TESTING - ADE}
 
 [3] Comprobar que funcionalidades extra funcionen juntas
 
