@@ -322,15 +322,20 @@ class SAR_Indexer:
 
         NECESARIO PARA LA AMPLIACION DE PERMUTERM
 
-
         """
-        pass
+        # ADE
+        
         ####################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
         ####################################################
-
-
-
+        
+        for term in list(self.index.keys()):
+            termmod = term + '*'
+            self.ptindex[termmod] = self.index[term]
+            for i in range(len(termmod)):
+                termmod = termmod[i:] + termmod[:i]
+                self.ptindex[termmod] = self.index[term]
+        pass
 
     def show_stats(self):
         """
@@ -492,10 +497,27 @@ class SAR_Indexer:
         return: posting list
 
         """
-
+        # ADE
+        
         ##################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
         ##################################################
+        
+        if (term.count('*') + term.count('?') > 1):
+            print('No se permite mas de un comodin por palabra.')
+            return None
+        
+        twoterms = re.split(r'[?*]', term)
+        firsttermlist = []
+        secondtermlist = []
+        for term in list(self.ptindex.keys()):
+            if term.endswith(twoterms[0]):
+                secondtermlist.append(self.ptindex[term])
+            if term.startswith(twoterms[1]):
+                firsttermlist.append(self.ptindex[term])
+        
+        return self.and_posting(firsttermlist, secondtermlist)
+        
         pass
 
 
