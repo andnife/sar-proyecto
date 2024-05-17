@@ -237,7 +237,7 @@ class SAR_Indexer:
         docId = len(self.docs) + 1
         self.docs[docId] = filename
 
-        for i, line in enumerate(open(filename)):
+        for line in enumerate(open(filename)):
             j = self.parse_article(line)
             if self.already_in_index(j):
                 continue
