@@ -46,6 +46,7 @@ class SAR_Indexer:
         self.index = {} # hash para el indice invertido de terminos --> clave: termino, valor: posting list
         self.sindex = {} # hash para el indice invertido de stems --> clave: stem, valor: lista con los terminos que tienen ese stem
         self.ptindex = {} # hash para el indice permuterm.
+        self.posindex = {} # hash para el indice posicional.
         self.docs = {} # diccionario de terminos --> clave: entero(docid),  valor: ruta del fichero.
         self.weight = {} # hash de terminos para el pesado, ranking de resultados.
         self.articles = {} # hash de articulos --> clave entero (artid), valor: la info necesaria para diferencia los artículos dentro de su fichero
@@ -233,7 +234,6 @@ class SAR_Indexer:
 
         """
 
-        
         docId = len(self.docs) + 1
         self.docs[docId] = filename
 
@@ -247,12 +247,28 @@ class SAR_Indexer:
             content = j[all]
             tokens = enumerate(self.tokenize(content))
 
+                    
+
             for token in tokens:
                 term = token.lower()
                 if term not in self.index:
                     self.index[term] = []
                 if artId not in self.index[term]:
                     self.index[term].append(artId)
+                if self.positional: # ADE
+                    temppos = 0
+                    positions = []
+                    while temppos != -1:
+                        temppos = content.find(term, temppos)
+                        if temppos != -1:
+                            positions.append(temppos)
+                    if term not in self.posindex:
+                        self.posindex[term] = []
+                    if artId not in self.posindex[term]:
+                        self.posindex[term][artId] = positions
+                    
+                    
+                
             self.urls.add(j['url'])
             
         # Invert index convertion
@@ -329,9 +345,13 @@ class SAR_Indexer:
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
         ####################################################
         
+        # Itero cada termino de los indexados
         for term in list(self.index.keys()):
+            # Añado el comodin al final y guardo la modificacion a la posting list del permuterm
             termmod = term + '*'
             self.ptindex[termmod] = self.index[term]
+            
+            # Voy a ir rotando el comodin y almacenando en la posting list del permuterm
             for i in range(len(termmod)):
                 termmod = termmod[i:] + termmod[:i]
                 self.ptindex[termmod] = self.index[term]
@@ -451,10 +471,35 @@ class SAR_Indexer:
         return: posting list
 
         """
-        pass
+        
+        # ADE
+        
         ########################################################
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE POSICIONALES ##
         ########################################################
+        
+        # Copio a un diccionario auxiliar las entradas de posting posicional de los terminos solicitados
+        dict = {}
+        list = terms.split()
+        for t in list:
+            if t not in dict:
+                dict[t] = {}
+            dict[t] = self.posindex[t]
+        
+        # Obtengo los documentos en los que aparecen todos los terminos solicitadoss
+        docs = dict[list[0]]
+        for t in list[1:]:
+            docs &= self.posindex[t]
+        
+        # Elimino las entradas de documentos no compartidos del diccionario auxiliar 
+        for t in list:
+            for d in list(self.posindex[t].keys()):
+                if d not in docs:
+                    del dict[t][d]
+        
+        # Miro en cada documento comun las posiciones de los terminos solicitados para ver si son consecutivas
+        
+        pass
 
 
     def get_stemming(self, term:str, field: Optional[str]=None):
@@ -503,19 +548,31 @@ class SAR_Indexer:
         ## COMPLETAR PARA FUNCIONALIDAD EXTRA PERMUTERM ##
         ##################################################
         
+        # Compruebo que no se use mas de un comodin por palabra
         if (term.count('*') + term.count('?') > 1):
             print('No se permite mas de un comodin por palabra.')
             return None
         
+        # Obtengo la parte de antes y despues del comodin
         twoterms = re.split(r'[?*]', term)
+        
+        # Aqui almacenare la posting list de buscar la parte delantera y trasera al comodin
         firsttermlist = []
         secondtermlist = []
+        
+        # Itero cada termino
         for term in list(self.ptindex.keys()):
+            # Si el termino obtenido de la lista de permuterm termina por la parte delantera
+            # al comodin, añado la posting list
             if term.endswith(twoterms[0]):
                 secondtermlist.append(self.ptindex[term])
+                
+            # Si el termino obtenido de la lista de permuterm empieza por la parte trasera
+            # al comodin, añado la posting list
             if term.startswith(twoterms[1]):
                 firsttermlist.append(self.ptindex[term])
         
+        # Devuelvo la interseccion de las posting list obtenidas
         return self.and_posting(firsttermlist, secondtermlist)
         
         pass
