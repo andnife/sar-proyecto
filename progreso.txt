@@ -10,7 +10,7 @@ SAR_lib.py
 		[2.2] + stemming {FALTA TESTING - BLANCA}
 			++ make_stemming()
 			++ get_stemming()
-		[2.3] + multifield
+		[2.3] + multifield {ADJUDICADO - ALVARO}
 		[2.4] + busquedas posicionales
 		[2.5] + permumterm {ADE}
 

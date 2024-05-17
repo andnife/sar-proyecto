@@ -237,7 +237,7 @@ class SAR_Indexer:
         docId = len(self.docs) + 1
         self.docs[docId] = filename
 
-        for i, line in enumerate(open(filename)):
+        for line in enumerate(open(filename)):
             j = self.parse_article(line)
             if self.already_in_index(j):
                 continue
@@ -253,15 +253,15 @@ class SAR_Indexer:
                     self.index[term] = []
                 if artId not in self.index[term]:
                     self.index[term].append(artId)
-                self.urls.add(j['url'])
+            self.urls.add(j['url'])
             
-            # Invert index convertion
-            terms = sorted(self.index.keys())
-            invertedIndex = {}
-            for t in terms:
-                invertedIndex[t] = self.index[t]
+        # Invert index convertion
+        terms = sorted(self.index.keys())
+        invertedIndex = {}
+        for t in terms:
+            invertedIndex[t] = self.index[t]
             
-            self.index = invertedIndex
+        self.index = invertedIndex
 
     def set_stemming(self, v:bool):
         """
@@ -536,8 +536,20 @@ class SAR_Indexer:
         return: posting list con todos los artid exceptos los contenidos en p
 
         """
+        #IVAN
+        #creamos una variable con todos los documentos
+        x = self.index
+
+        #creamos otra variable con los documentos a eliminar
+        y= p.sort()
+
+        #recorremos ambas listas elminando los elementos de x que esten en p
+        for t in x:
+            for z in y:
+                if y[z] == x[t]:
+                    del x[t]
+        return x 
         
-        pass
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
@@ -556,8 +568,8 @@ class SAR_Indexer:
         return: posting list con los artid incluidos en p1 y p2
 
         """
-        res = {}
-        while 
+        #IVAN
+        
         pass
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
@@ -577,6 +589,7 @@ class SAR_Indexer:
         return: posting list con los artid incluidos de p1 o p2
 
         """
+        #IVAN
 
         pass
         ########################################
