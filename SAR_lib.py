@@ -770,7 +770,13 @@ class SAR_Indexer:
         return: el numero de artículo recuperadas, para la opcion -T
 
         """
-        pass
+        #IVAN
+
+        print("========================================")
+        res = len(self.solve_query(query))
+        print(f"Query:{query}\n Nº de articulos recuperados:{res}")
+        print("========================================")
+
         ################
         ## COMPLETAR  ##
         ################
