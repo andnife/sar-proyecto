@@ -5,7 +5,14 @@
 
 SAR_lib.py
 	[1.2] - index_file() {FALTA TESTING - BLANCA}
-	[1.3] - tratamiento queries (paginas 11 y 12) {IVAN}
+	[1.3] - tratamiento queries (paginas 11 y 12) {FALTA TESTING - IVAN}
+		++and_posting
+		++or_posting
+		++solve_and_show
+		++reverse_posting
+		++get_posting
+		++solve_query
+
 		[2.1] + uso de parentesis para queries
 		[2.2] + stemming {FALTA TESTING - BLANCA}
 			++ make_stemming()
