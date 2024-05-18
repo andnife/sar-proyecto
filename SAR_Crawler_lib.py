@@ -174,42 +174,43 @@ class SAR_Wiki_Crawler:
         
         summ =  match['summary']
 
-        document={
+        document = {
             "url": url,
             "title": title,
-            "summary":summ,
-            "sections":[]
+            "summary": summ,
+            "sections": {}
         }
         #Miramos el resto del documento
         x = match['rest']
 
         #Si no tiene secciones se retorna el diccionario actual
-        if not match:
+        if not x:
             return document
         #Si el documento tiene secciones, se analizaran.
         else:
-            all = self.sections_re.findall(x)
-            for i in all:
-                match = self.section_re.match(i).groupdict()
+            sections = self.sections_re.findall(x)
+            for sect in sections:
+                match = self.section_re.match(sect).groupdict()
                 name = match['name']
                 text = match['text']
                 rest = match['rest']
-            if document["sections"][i] not in document["sections"]:
-                document["sections"][i]={
-                    "name" : name,
-                    "text" : text,
-                    "subsections" : []
-                }
-                all1 = self.subsections_re.findall(rest)
-                for j in all1:
-                    match = self.subsection_re.match(j).groupdict()
-                    name = match['name']
-                    text = match['text']
-                    if document["sections"][i][j] not in document["sections"][i]:
-                        document["sections"][i][j]={
-                            "name":name,
-                            "text":text
-                        }
+                if sect not in document['sections']:
+                    document['sections'][sect]={
+                        "name" : name,
+                        "text" : text,
+                        "subsections" : {}
+                    }
+                    subsections = self.subsections_re.findall(rest)
+                    for subsect in subsections:
+                        match = self.subsection_re.match(subsect).groupdict()
+                        name = match['name']
+                        text = match['text']
+                        if subsect not in document['sections'][sect]:
+                            document['sections'][sect][subsect]={
+                                "name":name,
+                                "text":text
+                            }
+        # pequeños fix ADE
 
         # FIN IVAN
 
@@ -317,29 +318,37 @@ class SAR_Wiki_Crawler:
 
             # Añado la URL a la lista de URLs visitadas
             if url not in visited:
-                visited.append(url)
+                visited.add(url) # FIX append() -> add() [SET NO TIENE METODO APPEND]
             ### FIN ADE
+
             # ALVARO
-            # Llamar a conversor texto ->JSON
-            batch_text += self.parse_wikipedia_textual_content(text,url)
-            batch_count += 1
-            if (batch_count < batch_size):
-                # Mientras el batch no este completo, añado una fila por cada artículo
+            # Llamar a conversor texto -> JSON
+            if batch_size is None:
+                batch_text += json.dumps(self.parse_wikipedia_textual_content(text,url))
                 batch_text += '\n'
             else:
-                # Hago batches en funcion a formato de nombres dado y batch actual
+                if batch_count < batch_size:
+                    # Mientras el batch no este completo, añado una fila por cada artículo
+                    batch_text += json.dumps(self.parse_wikipedia_textual_content(text,url))
+                    batch_text += '\n'
+                else:
+                    # Hago batches en funcion a formato de nombres dado y batch actual
+                    with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
+                        batch.write(batch_text)
+                    batch_text = ''
+                    batch_count = 0
+                    files_count += 1
+        
+        if batch_size is None:
+            with open(f'{base_filename}.json','w',encoding='utf-8') as batch:
+                batch.write(batch_text)
+        else:
+            # Cuando llegues al cupo del batch o no queden mas docs por ver, creas el file y lo escribes
+            if batch_count != 0:
+                # Hago batch con el texto lo restante
                 with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
                     batch.write(batch_text)
-                batch_text = ''
-                batch_count = 0
                 files_count += 1
-            
-        # Cuando llegues al cupo del batch o no queden mas docs por ver, creas el file y lo escribes
-        if batch_count != 0:
-            # Hago batch con el texto lo restante
-            with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
-                batch.write(batch_text)
-            files_count += 1
         # FIN ALVARO
 
 
