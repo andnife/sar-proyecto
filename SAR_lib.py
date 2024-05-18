@@ -626,14 +626,20 @@ class SAR_Indexer:
 
         """
         #IVAN
+        #creamos lista resultado y variables para iterar las listas
         res = []
         i=0
         j=0
+        #recorremos las listas hasta que se acabe una de las dos
         while i< len(p1) & j< len(p2):
+            #si los elementos coinciden los añadimos al resultado y aumentamos el valor
+            #de las variables para iterar
             if p1[i] == p2[j]:
                 res.append[p1[i]]
                 i+=1
                 j+=1
+            #si los elementos no son iguales, se aumenta el valor de la variable iteradora
+            #del elemento mas pequeño    
             elif p1[i] < p2[j]:
                 i+=1
             else:
@@ -658,20 +664,27 @@ class SAR_Indexer:
 
         """
         #IVAN
+        #creamos lista resultado y variables para iterar las listas
         res = []
         i=0
         j=0
+        #recorremos las listas hasta que se acabe una de las dos
         while i< len(p1) & j< len(p2):
+            #si los elementos coinciden los añadimos al resultado y aumentamos el valor
+            #de las variables para iterar
             if p1[i] == p2[j]:
                 res.append[p1[i]]
                 i+=1
                 j+=1
+            #si no coinciden los valores añadimos a la lista resultado el elemento mas pequeño
             elif p1[i] < p2[j]:
                 res.append[p1[i]]
                 i+=1
             else:
                 res.append[p2[j]]
                 j+=1
+        #para comprobar que no se queda ningun elemento de la lista por añadir, se recorre
+        #los elementos restantes y se añaden a la lista resultado        
         while i<len(p1):
             res.append[p1[i]]
             i+=1
