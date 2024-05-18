@@ -61,69 +61,69 @@ class SAR_Wiki_Crawler:
                 en inglés o español
         """
         if not self.is_valid_url(url):
-            raise ValueError((
+            #raise ValueError((
                 f"El enlace '{url}' no es un artículo de la Wikipedia en español"
-            ))
+            #))
+        else:
+            try:
+                req = requests.get(url)
+            except Exception as ex:
+                print(f"ERROR: - {url} - {ex}")
+                return None
 
-        try:
-            req = requests.get(url)
-        except Exception as ex:
-            print(f"ERROR: - {url} - {ex}")
-            return None
 
+            # Solo devolvemos el resultado si la petición ha sido correcta
+            if req.status_code == 200:
+                soup = bs4.BeautifulSoup(req.text, "lxml")
+                urls = set()
 
-        # Solo devolvemos el resultado si la petición ha sido correcta
-        if req.status_code == 200:
-            soup = bs4.BeautifulSoup(req.text, "lxml")
-            urls = set()
+                for ele in soup.select((
+                    'div#catlinks, div.printfooter, div.mw-authority-control'
+                )):
+                    ele.decompose()
 
-            for ele in soup.select((
-                'div#catlinks, div.printfooter, div.mw-authority-control'
-            )):
-                ele.decompose()
+                # Recogemos todos los enlaces del contenido del artículo
+                for a in soup.select("div#bodyContent a", href=True):
+                    href = a.get("href")
+                    if href is not None:
+                        urls.add(href)
 
-            # Recogemos todos los enlaces del contenido del artículo
-            for a in soup.select("div#bodyContent a", href=True):
-                href = a.get("href")
-                if href is not None:
-                    urls.add(href)
+                # Contenido del artículo
+                content = soup.select((
+                    "h1.firstHeading,"
+                    "div#mw-content-text h2,"
+                    "div#mw-content-text h3,"
+                    "div#mw-content-text h4,"
+                    "div#mw-content-text p,"
+                    "div#mw-content-text ul,"
+                    "div#mw-content-text li,"
+                    "div#mw-content-text span"
+                ))
 
-            # Contenido del artículo
-            content = soup.select((
-                "h1.firstHeading,"
-                "div#mw-content-text h2,"
-                "div#mw-content-text h3,"
-                "div#mw-content-text h4,"
-                "div#mw-content-text p,"
-                "div#mw-content-text ul,"
-                "div#mw-content-text li,"
-                "div#mw-content-text span"
-            ))
+                dedup_content = []
+                seen = set()
 
-            dedup_content = []
-            seen = set()
+                for element in content:
+                    if element in seen:
+                        continue
 
-            for element in content:
-                if element in seen:
-                    continue
+                    dedup_content.append(element)
 
-                dedup_content.append(element)
+                    # Añadimos a vistos, tanto el elemento como sus descendientes
+                    for desc in element.descendants:
+                        seen.add(desc)
 
-                # Añadimos a vistos, tanto el elemento como sus descendientes
-                for desc in element.descendants:
-                    seen.add(desc)
+                    seen.add(element)
 
-                seen.add(element)
+                text = "\n".join(
+                    self.section_format.get(element.name, "{}").format(element.text)
+                    for element in dedup_content
+                )
 
-            text = "\n".join(
-                self.section_format.get(element.name, "{}").format(element.text)
-                for element in dedup_content
-            )
+                # Eliminamos el texto de las anclas de editar
+                text = self.edit_re.sub('', text)
 
-            # Eliminamos el texto de las anclas de editar
-            text = self.edit_re.sub('', text)
-
-            return text, sorted(list(urls))
+                return text, sorted(list(urls))
 
         return None
 
@@ -305,50 +305,62 @@ class SAR_Wiki_Crawler:
             # De dicho elemento obtengo la URL a visitar y la profundidad
             depth = q[0]
             url = q[2]
+
+            '''
+            Las URL de Wikipedia apuntan de manera local, es decir, al vincular otra pagina de wikipedia, ahorran poner la direccion del servidor
+            (https://es.wikipedia.org) y apuntan directamente al contenedor correspondiente (p.e /wiki/Python).
+            De esta forma tratamos este caso antes de llamar a la funcion que obtiene la información de la página.
+            Cualquier página que no apunte a Wikipedia no se vera afectada porque SI empezara con la direccion al servidor.
+            '''
+            if not url.startswith("https://"): 
+                url = f'https://es.wikipedia.org{url}'
             
+            print(f'Remaining: {len(queue)} - Depth: {depth} - URL: {url}')
             # Obtengo el contenido plano en texto y las URL de la URL a visitar
-            text, list = self.get_wikipedia_entry_content(url)
-            
-            # Itero cada URL obtenida de la pagina
-            for l in list:
-                # Si la URL es valida y la profundidad es menor que la profundidad maxima, añado los hijos a la cola
-                if self.is_valid_url(l) & depth < max_depth_level:
-                    queue.append((depth+1,url,l))
-            hq.heapify(queue)
+            wikientrycontent = self.get_wikipedia_entry_content(url)
+            if wikientrycontent:
+                text, list = self.get_wikipedia_entry_content(url)
+                
+                # Itero cada URL obtenida de la pagina
+                for l in list:
+                    # Si la URL es valida y la profundidad es menor que la profundidad maxima, añado los hijos a la cola
+                    if self.is_valid_url(l) & (depth < max_depth_level) & (url not in visited):
+                        queue.append((depth+1,url,l))
+                hq.heapify(queue)
 
-            # Añado la URL a la lista de URLs visitadas
-            if url not in visited:
-                visited.add(url) # FIX append() -> add() [SET NO TIENE METODO APPEND]
-            ### FIN ADE
+                # Añado la URL a la lista de URLs visitadas
+                if url not in visited:
+                    visited.add(url) # FIX append() -> add() [SET NO TIENE METODO APPEND]
+                ### FIN ADE
 
-            # ALVARO
-            # Llamar a conversor texto -> JSON
-            if batch_size is None:
-                batch_text += json.dumps(self.parse_wikipedia_textual_content(text,url))
-                batch_text += '\n'
-            else:
-                if batch_count < batch_size:
-                    # Mientras el batch no este completo, añado una fila por cada artículo
+                # ALVARO
+                # Llamar a conversor texto -> JSON
+                if batch_size is None:
                     batch_text += json.dumps(self.parse_wikipedia_textual_content(text,url))
                     batch_text += '\n'
                 else:
-                    # Hago batches en funcion a formato de nombres dado y batch actual
+                    if batch_count < batch_size:
+                        # Mientras el batch no este completo, añado una fila por cada artículo
+                        batch_text += json.dumps(self.parse_wikipedia_textual_content(text,url))
+                        batch_text += '\n'
+                    else:
+                        # Hago batches en funcion a formato de nombres dado y batch actual
+                        with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
+                            batch.write(batch_text)
+                        batch_text = ''
+                        batch_count = 0
+                        files_count += 1
+            
+            if batch_size is None:
+                with open(f'{base_filename}.json','w',encoding='utf-8') as batch:
+                    batch.write(batch_text)
+            else:
+                # Cuando llegues al cupo del batch o no queden mas docs por ver, creas el file y lo escribes
+                if batch_count != 0:
+                    # Hago batch con el texto lo restante
                     with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
                         batch.write(batch_text)
-                    batch_text = ''
-                    batch_count = 0
                     files_count += 1
-        
-        if batch_size is None:
-            with open(f'{base_filename}.json','w',encoding='utf-8') as batch:
-                batch.write(batch_text)
-        else:
-            # Cuando llegues al cupo del batch o no queden mas docs por ver, creas el file y lo escribes
-            if batch_count != 0:
-                # Hago batch con el texto lo restante
-                with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
-                    batch.write(batch_text)
-                files_count += 1
         # FIN ALVARO
 
 
