@@ -180,38 +180,43 @@ class SAR_Wiki_Crawler:
             "summary": summ,
             "sections": []
         }
-        #Miramos el resto del documento
+        # Miramos el resto del documento
         x = match['rest']
-
-        #Si no tiene secciones se retorna el diccionario actual
+        # Si no tiene secciones se retorna el diccionario actual
         if not x:
             return document
-        #Si el documento tiene secciones, se analizaran.
+        # Si el documento tiene secciones, se analizaran.
         else:
-            sections = self.sections_re.findall(x)
-            for sect in sections:
-                match = self.section_re.match(sect).groupdict()
-                name = match['name']
-                text = match['text']
-                rest = match['rest']
-                section_dic={
-                    "name" : name,
-                    "text" : text,
-                    "subsections" : []
+            sectionsname = self.sections_re.findall(x)
+            patron = '|'.join(map(str, sectionsname))
+            sectionscontent = re.split(patron, x)
+            sectionscontent.pop(0) # Elimina el primer elemento que esta vacío
+
+            for i in range(len(sectionsname)):
+                s = {
+                    "name": sectionsname[i].strip()[2:-2],
+                    "text": "",
+                    "subsections": []
                 }
-                document['sections'].append(section_dic)
-                subsections = self.subsections_re.findall(rest)
-                for subsect in subsections:
-                    match = self.subsection_re.match(subsect).groupdict()
-                    name = match['name']
-                    text = match['text']
-                        
-                    subsect_dic={
-                        "name":name,
-                        "text":text
-                    }
-                    document['sections'][-1]['subsections'].append(subsect_dic)
-        # pequeños fix ADE
+                subsectionsname = self.subsections_re.findall(sectionscontent[i])
+                if len(subsectionsname) == 0:
+                    # No hay subsecciones
+                    s['text'] = sectionscontent[i]
+                else:
+                    patron = '|'.join(map(str, subsectionsname))
+                    subsectionscontent = re.split(patron, sectionscontent[i])
+                    s['text'] = subsectionscontent.pop(0) # Guarda el primer elemento (el texto antes de las subsecciones)
+                    for j in range(len(subsectionsname)):
+                        ss = {
+                            "name": subsectionsname[j],
+                            "text": subsectionscontent[j]
+                        }
+                        s["subsections"].append(ss)
+                document['sections'].append(s)
+            print(document)
+            exit()
+
+        # FIX SUBSECTIONS ADE
 
         # FIN IVAN
 
@@ -321,7 +326,6 @@ class SAR_Wiki_Crawler:
             wikientrycontent = self.get_wikipedia_entry_content(url)
             if wikientrycontent:
                 text, list = self.get_wikipedia_entry_content(url)
-                
                 # Itero cada URL obtenida de la pagina
                 for l in list:
                     # Si la URL es valida y la profundidad es menor que la profundidad maxima, añado los hijos a la cola
