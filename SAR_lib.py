@@ -773,9 +773,14 @@ class SAR_Indexer:
         #IVAN
 
         print("========================================")
-        res = len(self.solve_query(query))
-        print(f"Query:{query}\n Nº de articulos recuperados:{res}")
+        qu = self.solve_query(query)
+        res = len(qu)
+        for i in qu:
+            tit= self.articles[i]
+            print(f"( {i}): {tit[1]} -> {tit[0]}")
         print("========================================")
+        print(f"Query:{query}\n Nº de articulos recuperados:{res}")
+        
 
         ################
         ## COMPLETAR  ##
