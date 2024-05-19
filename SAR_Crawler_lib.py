@@ -213,8 +213,6 @@ class SAR_Wiki_Crawler:
                         }
                         s["subsections"].append(ss)
                 document['sections'].append(s)
-            print(document)
-            exit()
 
         # FIX SUBSECTIONS ADE
 
@@ -275,7 +273,7 @@ class SAR_Wiki_Crawler:
                 fichero. Si se asigna None, se guardará al finalizar la captura.
             max_depth_level (int): Profundidad máxima de captura.
         """
-
+        base_filename = base_filename.split('.')[0] # Elimno el .json ya que lo añado despues
         # URLs válidas, ya visitadas (se hayan procesado, o no, correctamente)
         visited = set()
         # URLs en cola
