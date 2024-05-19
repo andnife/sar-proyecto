@@ -188,8 +188,7 @@ class SAR_Wiki_Crawler:
         # Si el documento tiene secciones, se analizaran.
         else:
             sectionsname = self.sections_re.findall(x)
-            patron = '|'.join(map(str, sectionsname))
-            sectionscontent = re.split(patron, x)
+            sectionscontent = self.sections_re.split(x)
             sectionscontent.pop(0) # Elimina el primer elemento que esta vacío
 
             for i in range(len(sectionsname)):
@@ -203,8 +202,7 @@ class SAR_Wiki_Crawler:
                     # No hay subsecciones
                     s['text'] = sectionscontent[i]
                 else:
-                    patron = '|'.join(map(str, subsectionsname))
-                    subsectionscontent = re.split(patron, sectionscontent[i])
+                    subsectionscontent = self.subsections_re.split(sectionscontent[i])
                     s['text'] = subsectionscontent.pop(0) # Guarda el primer elemento (el texto antes de las subsecciones)
                     for j in range(len(subsectionsname)):
                         ss = {
