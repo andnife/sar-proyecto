@@ -626,6 +626,7 @@ class SAR_Indexer:
 
         """
         #IVAN
+
         #creamos lista resultado y variables para iterar las listas
         res = []
         i=0
@@ -645,6 +646,7 @@ class SAR_Indexer:
             else:
                 j+=1
         return res        
+
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
@@ -710,7 +712,7 @@ class SAR_Indexer:
         return: posting list con los artid incluidos de p1 y no en p2
 
         """
-        #IVAN
+        #IVAN   
         i = 0
         j = 0
         res = []
@@ -800,7 +802,6 @@ class SAR_Indexer:
         ################
         ## COMPLETAR  ##
         ################
-
 
 
 

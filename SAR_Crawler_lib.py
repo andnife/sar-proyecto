@@ -178,7 +178,7 @@ class SAR_Wiki_Crawler:
             "url": url,
             "title": title,
             "summary": summ,
-            "sections": {}
+            "sections": []
         }
         #Miramos el resto del documento
         x = match['rest']
@@ -194,22 +194,23 @@ class SAR_Wiki_Crawler:
                 name = match['name']
                 text = match['text']
                 rest = match['rest']
-                if sect not in document['sections']:
-                    document['sections'][sect]={
-                        "name" : name,
-                        "text" : text,
-                        "subsections" : {}
+                section_dic={
+                    "name" : name,
+                    "text" : text,
+                    "subsections" : []
+                }
+                document['sections'].append(section_dic)
+                subsections = self.subsections_re.findall(rest)
+                for subsect in subsections:
+                    match = self.subsection_re.match(subsect).groupdict()
+                    name = match['name']
+                    text = match['text']
+                        
+                    subsect_dic={
+                        "name":name,
+                        "text":text
                     }
-                    subsections = self.subsections_re.findall(rest)
-                    for subsect in subsections:
-                        match = self.subsection_re.match(subsect).groupdict()
-                        name = match['name']
-                        text = match['text']
-                        if subsect not in document['sections'][sect]:
-                            document['sections'][sect][subsect]={
-                                "name":name,
-                                "text":text
-                            }
+                    document['sections'][-1]['subsections'].append(subsect_dic)
         # pequeños fix ADE
 
         # FIN IVAN
