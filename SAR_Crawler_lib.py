@@ -208,7 +208,7 @@ class SAR_Wiki_Crawler:
                     s['text'] = subsectionscontent.pop(0) # Guarda el primer elemento (el texto antes de las subsecciones)
                     for j in range(len(subsectionsname)):
                         ss = {
-                            "name": subsectionsname[j],
+                            "name": subsectionsname[j].strip()[2:-2],
                             "text": subsectionscontent[j]
                         }
                         s["subsections"].append(ss)
