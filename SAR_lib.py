@@ -710,9 +710,24 @@ class SAR_Indexer:
         return: posting list con los artid incluidos de p1 y no en p2
 
         """
-
-        
-        pass
+        #IVAN
+        i = 0
+        j = 0
+        res = []
+        while i < len(p1) & j < len(p2):
+            if p1[i]==p2[j]:
+                i+=1
+                j+=1
+            elif p1[i]<p2[j]:
+                res.append(p1[i])
+                i+=1
+            else:
+                j+=1
+        while i<len(p1):
+            res.append(p1[i])
+            i+=1
+        return res                    
+    
         ########################################################
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
