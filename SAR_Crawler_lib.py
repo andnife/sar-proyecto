@@ -163,9 +163,16 @@ class SAR_Wiki_Crawler:
         # IVAN
         #creamos el diccionario a devolver
         document = {}
-
+        if text is None:
+            return None
+        
+        match = None
         #comprobamos si algun elemento en el documento coincide con el patrón del titulo
-        match = self.title_sum_re.match(text).groupdict()
+        try:
+            match = self.title_sum_re.match(text).groupdict()
+        except:
+            return None
+        
         #en caso negativo se devuelve None
         if not match:
             return None
@@ -299,8 +306,9 @@ class SAR_Wiki_Crawler:
         ### ADE
         batch_text = ''
         batch_count = 0
+        finished = False
         # Itero mientras la cola no este vacia
-        while len(queue) > 0:
+        while len(queue) > 0 and not finished:
             # Obtengo el primer elemento de la cola y lo elimino
             q = queue.pop(0)
             
@@ -316,8 +324,11 @@ class SAR_Wiki_Crawler:
             '''
             if not url.startswith("https://"): 
                 url = f'https://es.wikipedia.org{url}'
-            
-            print(f'Remaining: {len(queue)} - Depth: {depth} - URL: {url}')
+            total_documents_captured += 1
+            if files_count >= total_files:
+                finished = True
+            if total_documents_captured >= document_limit:
+                finished = True
             # Obtengo el contenido plano en texto y las URL de la URL a visitar
             wikientrycontent = self.get_wikipedia_entry_content(url)
             if wikientrycontent:
@@ -340,28 +351,34 @@ class SAR_Wiki_Crawler:
                     batch_text += json.dumps(self.parse_wikipedia_textual_content(text,url))
                     batch_text += '\n'
                 else:
-                    if batch_count < batch_size:
+                    if batch_count <= batch_size:
                         # Mientras el batch no este completo, añado una fila por cada artículo
                         batch_text += json.dumps(self.parse_wikipedia_textual_content(text,url))
                         batch_text += '\n'
+                        batch_count += 1
                     else:
                         # Hago batches en funcion a formato de nombres dado y batch actual
                         with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
                             batch.write(batch_text)
+                        print(f'Escrito un batch ({base_filename}_{files_count}.json)')
                         batch_text = ''
                         batch_count = 0
                         files_count += 1
+            print(f'Remaining: {len(queue)} - Depth: {depth} - Files count: {files_count} - Batch size: {batch_size} - Batch count: {batch_count} - Total documents captured: {total_documents_captured} - URL: {url}')
+
             
-            if batch_size is None:
-                with open(f'{base_filename}.json','w',encoding='utf-8') as batch:
+        if batch_size is None:
+            with open(f'{base_filename}.json','w',encoding='utf-8') as batch:
+                batch.write(batch_text)
+            print(f'Escrito un batch {base_filename}.json')
+        else:
+            # Cuando llegues al cupo del batch o no queden mas docs por ver, creas el file y lo escribes
+            if batch_count != 0:
+                # Hago batch con el texto lo restante
+                with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
                     batch.write(batch_text)
-            else:
-                # Cuando llegues al cupo del batch o no queden mas docs por ver, creas el file y lo escribes
-                if batch_count != 0:
-                    # Hago batch con el texto lo restante
-                    with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
-                        batch.write(batch_text)
-                    files_count += 1
+                print(f'Escrito un batch ({base_filename}_{files_count}.json)')
+                files_count += 1
         # FIN ALVARO
 
 
