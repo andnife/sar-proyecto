@@ -184,6 +184,17 @@ class SAR_Indexer:
                     if filename.endswith('.json'):
                         fullname = os.path.join(d, filename) #crea la ruta del archivo
                         self.index_file(fullname) #indexa el archivo con la ruta obtenida anteriormente
+            
+            print('========================================')
+            print(f'Number of indexed files: {len(self.docs.keys())}')
+            print('----------------------------------------')
+            print(f'Number of indexed articles: {len(self.articles.keys())}')
+            print('----------------------------------------')
+            print(f'TOKENS:')
+            #for key in j.keys():
+            #    print(f'\t# of tokens in \'{key}\': {len(j[key])}')
+            print('----------------------------------------')
+            print('========================================')
         else:
             print(f"ERROR:{root} is not a file nor directory!", file=sys.stderr)
             sys.exit(-1)
@@ -403,18 +414,38 @@ class SAR_Indexer:
 
         """
         #IVAN
-        querysplit = query.split()
-        post = {}
-        terms = ['AND','OR','NOT']
-        for q in querysplit:
-            if q.upper() not in terms:
-                if q.lower() not in post:
-                    post[q.lower()]=self.get_posting(q)
-        aux=[]
+        terminos = query.split()
+        operators = ['AND','OR']
+        if len(terminos) == 0:
+            return None
         
-        for t in querysplit:
-            
-             
+        aux = terminos.pop(0)
+        if aux.upper() == 'NOT':
+            term = terminos.pop(0)
+            postingterm = self.get_posting(term)
+            aux = self.reverse_posting(postingterm)
+            print(f'Termino: {term} - PostingList: {postingterm} - Negada: {aux}')
+        else:
+            aux = self.get_posting(aux)
+        
+        while len(terminos) > 0:
+            op = terminos.pop(0)
+            if op.upper() == 'NOT':
+                t = self.reverse_posting(self.get_posting(terminos.pop(0)))
+            else:
+                t = terminos.pop(0)
+                if t.upper() == 'NOT':
+                    t = self.reverse_posting(self.get_posting(terminos.pop(0)))
+                else:
+                    t = self.get_posting(t)
+            if op.upper() == 'AND':
+                aux = self.and_posting(aux, t)
+            if op.upper() == 'OR':
+                aux = self.or_posting(aux, t)
+
+        return aux
+
+
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
@@ -608,18 +639,21 @@ class SAR_Indexer:
 
         """
         #IVAN
-        #creamos una variable con todos los documentos
-        x = self.index
+        # Creo una lista con todos los indices de documentos
+        alldocs = list(range(1,len(self.articles)+1))
 
-        #creamos otra variable con los documentos a eliminar
-        y= p.sort()
+        # Creo una lista vacia de los indices a devolver
+        resdocs = []
+        
+        # Guardo una lista con los documentos a eliminar
+        removedocs = p
 
-        #recorremos ambas listas elminando los elementos de x que esten en p
-        for t in x:
-            for z in y:
-                if y[z] == x[t]:
-                    del x[t]
-        return x 
+        # Itero cada documento de los originales
+        for doc in alldocs:
+            if doc not in removedocs: # Si el documento no esta dentro de los documentos a eliminar lo añado
+                resdocs.append(doc)
+
+        return resdocs
         
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
@@ -805,9 +839,10 @@ class SAR_Indexer:
 
         print("========================================")
         q = self.solve_query(query)
+        print(q)
         res = len(q)
         for i in q:
-            tit= self.articles[i]
+            tit = self.articles[i]
             print(f"({i}): {tit[1]} -> {tit[0]}")
         print("========================================")
         print(f"Query:{query}\n Nº de articulos recuperados:{res}")
