@@ -403,22 +403,23 @@ class SAR_Indexer:
 
         """
         #IVAN
-
-        if not query  or len(query) == 0:
-            return []
+        querysplit = query.split()
+        post = {}
+        terms = ['AND','OR','NOT']
+        for q in querysplit:
+            if q.upper() not in terms:
+                if q.lower() not in post:
+                    post[q.lower()]=self.get_posting(q)
+        aux=[]
         
-        terminos = self.tokenize(query)
-        # falta tratar query
-        res = []
-
-        for x in terminos:
-            if x in self.index:
-                docs = self.index[x]
-                for doc in docs:
-                    if doc not in res:
-                        res.append(doc)          
+        for t in querysplit:
+            
+             
+        ########################################
+        ## COMPLETAR PARA TODAS LAS VERSIONES ##
+        ########################################
         
-        #FUNCIONALIDADES AMPLIADAS -> PARÉNTESIS
+    #FUNCIONALIDADES AMPLIADAS -> PARÉNTESIS
         #BLANCA
 
         while '(' in query or ')' in query:
@@ -441,7 +442,6 @@ class SAR_Indexer:
             query[ini] = self.solve_query(subquery)
 
 
-        return res  
 
     def get_posting(self, term:str, field:Optional[str]=None):
         """
