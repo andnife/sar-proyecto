@@ -423,16 +423,16 @@ class SAR_Indexer:
         terminos = query.split()
         if len(terminos) == 0:
             return None
-        
         aux = terminos.pop(0)
+        print(aux)
         if aux.upper() == 'NOT':
             term = terminos.pop(0)
             postingterm = self.get_posting(term)
             aux = self.reverse_posting(postingterm)
-            print(f'Termino: {term} - PostingList: {postingterm} - Negada: {aux}')
         else:
             aux = self.get_posting(aux)
         
+        print(aux)
         while len(terminos) > 0:
             op = terminos.pop(0)
             if op.upper() == 'NOT':
@@ -447,6 +447,7 @@ class SAR_Indexer:
                 aux = self.and_posting(aux, t)
             if op.upper() == 'OR':
                 aux = self.or_posting(aux, t)
+            print(aux)
 
 
         #FUNCIONALIDADES AMPLIADAS -> PARÉNTESIS
