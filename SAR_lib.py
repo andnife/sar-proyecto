@@ -265,16 +265,16 @@ class SAR_Indexer:
                     temppos = 0
                     positions = []
                     while temppos != -1:
-                        temppos = content.find(term, temppos)
+                        temppos = content.find(term, temppos+1)
                         if temppos != -1:
                             positions.append(temppos)
+                            
                     if term not in self.posindex:
                         self.posindex[term] = []
+                        
                     if artId not in self.posindex[term]:
-                        self.posindex[term][artId] = positions
+                        self.posindex[term] = {artId: positions}
                     
-                    
-                
             self.urls.add(j['url'])
             
         # Invert index convertion
@@ -567,7 +567,7 @@ class SAR_Indexer:
                     del dict[t][d]
         
         # Miro en cada documento comun las posiciones de los terminos solicitados para ver si son consecutivas
-        
+        print(dict)
         pass
 
 
