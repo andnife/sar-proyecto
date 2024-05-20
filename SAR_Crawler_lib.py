@@ -360,12 +360,12 @@ class SAR_Wiki_Crawler:
                     else:
                         # Hago batches en funcion a formato de nombres dado y batch actual
                         files_count += 1
-                        with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
+                        with open(f'{base_filename}_{files_count}_{document_limit}.json','w',encoding='utf-8') as batch:
                             batch.write(batch_text)
                         batch_text = json.dumps(self.parse_wikipedia_textual_content(text,url))
                         batch_text += '\n'
                         batch_count = 1
-                        print(f'Escrito un batch ({base_filename}_{files_count}.json)')
+                        print(f'Escrito un batch ({base_filename}_{files_count}_{document_limit}.json)')
                 total_documents_captured += 1
             if total_documents_captured >= document_limit:
                 finished = True
