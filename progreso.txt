@@ -13,7 +13,7 @@ SAR_lib.py
 		++get_posting
 		++solve_query
 
-		[2.1] + uso de parentesis para queries
+		[2.1] + uso de parentesis para queries {EN PROCESO - BLANCA}
 		[2.2] + stemming {FALTA TESTING - BLANCA}
 			++ make_stemming()
 			++ get_stemming()
