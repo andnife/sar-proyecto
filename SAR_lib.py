@@ -436,60 +436,95 @@ class SAR_Indexer:
         return: posting list con el resultado de la query
 
         """
-        #IVAN
+        #ÁLVARO
+        query = re.sub(r'(\()(\S)', r'\1 \2', query)
+        query = re.sub(r'(\S)(\))', r'\1 \2', query)
+        query = re.sub(r'(\))(\S)', r'\1 \2', query)
+        query = re.sub(r'(\S)(\()', r'\1 \2', query)
+        #Separamos los paréntesis del resto de elementos
+        #IVÁN
         terminos = query.split()
         if len(terminos) == 0:
             return None
-        aux = terminos.pop(0)
-        print(aux)
-        if aux.upper() == 'NOT':
-            term = terminos.pop(0)
-            postingterm = self.get_posting(term)
-            aux = self.reverse_posting(postingterm)
-        else:
-            aux = self.get_posting(aux)
         
-        print(aux)
-        while len(terminos) > 0:
-            op = terminos.pop(0)
-            if op.upper() == 'NOT':
-                t = self.reverse_posting(self.get_posting(terminos.pop(0)))
-            else:
+        aux = terminos.pop(0)
+        if aux == '(':  # Detecta el inicio de una subquery
+                subquery = []
+                balance = 1  # Balance de paréntesis para manejar subqueries anidadas
+                while terminos and balance > 0:
+                    token = terminos.pop(0)
+                    if token == '(':
+                        balance += 1
+                    elif token == ')':
+                        balance -= 1
+                    if balance > 0:
+                        subquery.append(token) #Añado elementos a la subquery para resolverla entera recursivamente
+                aux = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
+        
+        elif aux.upper() == 'NOT': #En caso de detectar un not, procesamos el término/paréntesis a continuación
+                term = terminos.pop(0)
+                if term == '(':  # Detecta subquery después de NOT, llamando otra vez al manejador de subqueries
+                    subquery = []
+                    balance = 1
+                    while terminos and balance > 0:
+                        token = terminos.pop(0)
+                        if token == '(':
+                            balance += 1
+                        elif token == ')':
+                            balance -= 1
+                        if balance > 0:
+                            subquery.append(token)
+                    term = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery, la cual se acaba revirtiendo por el NOT
+                else:
+                    term = self.get_posting(term)
+                aux = self.reverse_posting(term) # Se revierte la query por el NOT
+        else:
+            aux = self.get_posting(aux) #Como la primera palabra no es ni un paréntesis de apertura ni un NOT, se procesa como argumento
+            
+        while len(terminos) > 0: # Mientras queden argumentos por procesar de la query, los proceso
+            op = terminos.pop(0) # Sabemos que lo siguiente de un argumento tiene que ser un operador o un paréntesis que cierra
+            if op == ')':  # Si encontramos el parentesis que cierre, termina la subquery, con lo que se procesa (esto solo afecta en la llamada recursiva)
+                break
+            if op.upper() == 'NOT': #Procedimiento para un NOT, igual que antes
                 t = terminos.pop(0)
-                if t.upper() == 'NOT':
-                    t = self.reverse_posting(self.get_posting(terminos.pop(0)))
+                if t == '(':  # Detecta subquery después de NOT
+                    subquery = []
+                    balance = 1
+                    while terminos and balance > 0:
+                        token = terminos.pop(0)
+                        if token == '(':
+                            balance += 1
+                        elif token == ')':
+                            balance -= 1
+                        if balance > 0:
+                            subquery.append(token)
+                    t = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
                 else:
                     t = self.get_posting(t)
-            if op.upper() == 'AND':
+                t = self.reverse_posting(t)
+            else:
+                t = terminos.pop(0) #En caso de no ser un not, sacamos el término a continuación del operador para realizar el AND o el OR de ambos
+                if t == '(':  # En caso de que el siguiente término sea una subquery, se procesa primero
+                    subquery = []
+                    balance = 1
+                    while terminos and balance > 0:
+                        token = terminos.pop(0)
+                        if token == '(':
+                            balance += 1
+                        elif token == ')':
+                            balance -= 1
+                        if balance > 0:
+                            subquery.append(token)
+                    t = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
+                else:
+                    t = self.get_posting(t)
+            
+            if op.upper() == 'AND': #Aquí ya especificamos qué comportamiento tiene el AND y el OR
                 aux = self.and_posting(aux, t)
-            if op.upper() == 'OR':
+            elif op.upper() == 'OR':
                 aux = self.or_posting(aux, t)
-            print(aux)
-
-
-        #FUNCIONALIDADES AMPLIADAS -> PARÉNTESIS
-        #BLANCA
-
-        while '(' in query or ')' in query:
-            ini = 0
-            end = 0
-
-            for i in range(len(query)):
-                if query[i] == '(':
-                    ini = i
-                elif query[i] == ')':
-                    end = i
-                    break
-            #we save subquery
-            subquery = query[ini + 1: end]
-
-            #Eliminate subquery from principal quary, except '('
-            query[ini + 1: end + 1]
-
-            #Calculate subquery + introduce result in original query
-            query[ini] = self.solve_query(subquery)
-
-        return aux
+        # Las queries se irán procesando de izquierda a derecha, filtrándose las posting lists intermedias progresivamente
+        return aux # Devolvemos la posting list final
 
 
     def get_posting(self, term:str, field:Optional[str]=None):
