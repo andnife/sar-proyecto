@@ -237,18 +237,16 @@ class SAR_Indexer:
         docId = len(self.docs) + 1
         self.docs[docId] = filename
 
-        for line in enumerate(open(filename)):
-            j = self.parse_article(line)
+        for line in open(filename, encoding='utf-8', errors='replace'): # Enumerate no necesario
+            j = self.parse_article(line.strip())
             if self.already_in_index(j):
                 continue
             artId = len(self.articles) + 1
             self.articles[artId] = (j['url'], j['title'], j['all'])
 
-            content = j[all]
-            tokens = enumerate(self.tokenize(content))
-
-                    
-
+            content = j['all']
+            tokens = self.tokenize(content)
+            
             for token in tokens:
                 term = token.lower()
                 if term not in self.index:
@@ -403,19 +401,19 @@ class SAR_Indexer:
         """
         #IVAN
 
-        if query is None or len(query) == 0:
+        if not query  or len(query) == 0:
             return []
         
         terminos = self.tokenize(query)
-
+        # falta tratar query
         res = []
 
         for x in terminos:
             if x in self.index:
-                docs=self.index[x]
-                if docs not in res:
-                    res.append(docs)
-
+                docs = self.index[x]
+                for doc in docs:
+                    if doc not in res:
+                        res.append(doc)
         return res            
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
@@ -790,11 +788,11 @@ class SAR_Indexer:
         #IVAN
 
         print("========================================")
-        qu = self.solve_query(query)
-        res = len(qu)
-        for i in qu:
+        q = self.solve_query(query)
+        res = len(q)
+        for i in q:
             tit= self.articles[i]
-            print(f"( {i}): {tit[1]} -> {tit[0]}")
+            print(f"({i}): {tit[1]} -> {tit[0]}")
         print("========================================")
         print(f"Query:{query}\n Nº de articulos recuperados:{res}")
         
