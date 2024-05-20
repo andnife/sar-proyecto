@@ -307,6 +307,12 @@ class SAR_Wiki_Crawler:
         batch_text = ''
         batch_count = 0
         finished = False
+
+        if total_documents_captured >= document_limit:
+            finished = True
+        if total_files and total_files >= document_limit:
+            finished = True
+
         # Itero mientras la cola no este vacia
         while len(queue) > 0 and not finished:
             # Obtengo el primer elemento de la cola y lo elimino
@@ -324,15 +330,10 @@ class SAR_Wiki_Crawler:
             '''
             if not url.startswith("https://"): 
                 url = f'https://es.wikipedia.org{url}'
-            total_documents_captured += 1
-            if files_count >= total_files:
-                finished = True
-            if total_documents_captured >= document_limit:
-                finished = True
             # Obtengo el contenido plano en texto y las URL de la URL a visitar
             wikientrycontent = self.get_wikipedia_entry_content(url)
             if wikientrycontent:
-                text, list = self.get_wikipedia_entry_content(url)
+                text, list = wikientrycontent
                 # Itero cada URL obtenida de la pagina
                 for l in list:
                     # Si la URL es valida y la profundidad es menor que la profundidad maxima, añado los hijos a la cola
@@ -347,27 +348,32 @@ class SAR_Wiki_Crawler:
 
                 # ALVARO
                 # Llamar a conversor texto -> JSON
-                if batch_size is None:
+                if not batch_size:
                     batch_text += json.dumps(self.parse_wikipedia_textual_content(text,url))
                     batch_text += '\n'
                 else:
-                    if batch_count <= batch_size:
+                    if batch_count < batch_size:
                         # Mientras el batch no este completo, añado una fila por cada artículo
                         batch_text += json.dumps(self.parse_wikipedia_textual_content(text,url))
                         batch_text += '\n'
                         batch_count += 1
                     else:
                         # Hago batches en funcion a formato de nombres dado y batch actual
+                        files_count += 1
                         with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
                             batch.write(batch_text)
+                        batch_text = json.dumps(self.parse_wikipedia_textual_content(text,url))
+                        batch_text += '\n'
+                        batch_count = 1
                         print(f'Escrito un batch ({base_filename}_{files_count}.json)')
-                        batch_text = ''
-                        batch_count = 0
-                        files_count += 1
-            print(f'Remaining: {len(queue)} - Depth: {depth} - Files count: {files_count} - Batch size: {batch_size} - Batch count: {batch_count} - Total documents captured: {total_documents_captured} - URL: {url}')
+                total_documents_captured += 1
+            if total_documents_captured >= document_limit:
+                finished = True
+            if total_files and total_files >= document_limit:
+                finished = True
+            print(f'Remaining: {len(queue)} - URL: {url}\nDepth: {depth} - Files count: {files_count} - Total documents captured: {total_documents_captured}\nBatch size: {batch_size} - Batch count: {batch_count}\n')
 
-            
-        if batch_size is None:
+        if not batch_size:
             with open(f'{base_filename}.json','w',encoding='utf-8') as batch:
                 batch.write(batch_text)
             print(f'Escrito un batch {base_filename}.json')
@@ -375,11 +381,12 @@ class SAR_Wiki_Crawler:
             # Cuando llegues al cupo del batch o no queden mas docs por ver, creas el file y lo escribes
             if batch_count != 0:
                 # Hago batch con el texto lo restante
+                files_count += 1
                 with open(f'{base_filename}_{files_count}.json','w',encoding='utf-8') as batch:
                     batch.write(batch_text)
                 print(f'Escrito un batch ({base_filename}_{files_count}.json)')
-                files_count += 1
         # FIN ALVARO
+        # FIX ADE
 
 
     def wikipedia_crawling_from_url(self,
