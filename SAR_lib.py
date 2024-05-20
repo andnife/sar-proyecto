@@ -23,7 +23,7 @@ class SAR_Indexer:
     # lista de campos, el booleano indica si se debe tokenizar el campo
     # NECESARIO PARA LA AMPLIACION MULTIFIELD
     fields = [
-        ("all", True), ("title", True), ("summary", True), ("section-name", True), ('url', False),
+        ("all", True), ("title", False), ("summary", False), ("section-name", False), ('url', False),
     ]
     def_field = 'all'
     PAR_MARK = '%'
@@ -265,16 +265,16 @@ class SAR_Indexer:
                     temppos = 0
                     positions = []
                     while temppos != -1:
-                        temppos = content.find(term, temppos)
+                        temppos = content.find(term, temppos+1)
                         if temppos != -1:
                             positions.append(temppos)
+                            
                     if term not in self.posindex:
                         self.posindex[term] = []
+                        
                     if artId not in self.posindex[term]:
-                        self.posindex[term][artId] = positions
+                        self.posindex[term] = {artId: positions}
                     
-                    
-                
             self.urls.add(j['url'])
             
         # Invert index convertion
@@ -383,21 +383,24 @@ class SAR_Indexer:
 
         #Tokens
         print(f'TOKENS:')
-        for key in self.index.keys():
-           print(f'\t# of tokens in \'{key}\': {len(self.index[key])}')
-        print('----------------------------------------')
+        for field,v in self.fields:
+            if v:
+                print(f'\t# of tokens in \'{field}\': {len(self.index[field])}')
+                print('----------------------------------------')
 
         #Permuterm
         if (self.permuterm):
-            for key in self.ptindex.keys():
-                print(f'\t# of tokens in \'{key}\': {len(self.ptindex[key])}')
-        print('----------------------------------------')
+            for field,v in self.fields:
+                if v:
+                    print(f'\t# of tokens in \'{field}\': {len(self.ptindex[field])}')
+                    print('----------------------------------------')
 
         #Stemming
         if (self.stemming):
-            for key in self.sindex.keys():
-                print(f'\t# of tokens in \'{key}\': {len(self.sindex[key])}')
-        print('----------------------------------------')
+            for field,v in self.fields:
+                if v:
+                    print(f'\t# of tokens in \'{field}\': {len(self.sindex[field])}')
+                    print('----------------------------------------')
 
         #Positional
         if (self.positional):
@@ -599,7 +602,7 @@ class SAR_Indexer:
                     del dict[t][d]
         
         # Miro en cada documento comun las posiciones de los terminos solicitados para ver si son consecutivas
-        
+        print(dict)
         pass
 
 
