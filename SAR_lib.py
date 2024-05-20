@@ -444,24 +444,17 @@ class SAR_Indexer:
         #ÁLVARO
         #ADE
         #IVÁN
-        print(f'antesdnada: {query}')
         query = re.sub(r'(\()(\S)', r'\1 \2', query)
-        print(f'1: {query}')
         query = re.sub(r'(\S)(\))', r'\1 \2', query)
-        print(f'2: {query}')
         query = re.sub(r'(\))(\S)', r'\1 \2', query)
-        print(f'3: {query}')
         query = re.sub(r'(\S)(\()', r'\1 \2', query)
-        print(f'4: {query}')
         #Separamos los paréntesis del resto de elementos
-        
         terminos = query.split()
         if len(terminos) == 0:
             return None
-        print(f'Voy a hacer: {terminos}')
         aux = terminos.pop(0)
         if aux == '(':  # Detecta el inicio de una subquery
-                subquery = []
+                subquery = ''
                 balance = 1  # Balance de paréntesis para manejar subqueries anidadas
                 while terminos and balance > 0:
                     token = terminos.pop(0)
@@ -470,13 +463,13 @@ class SAR_Indexer:
                     elif token == ')':
                         balance -= 1
                     if balance > 0:
-                        subquery.append(token) #Añado elementos a la subquery para resolverla entera recursivamente
+                        subquery += ' ' + token #Añado elementos a la subquery para resolverla entera recursivamente
                 aux = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
         
         elif aux.upper() == 'NOT': #En caso de detectar un not, procesamos el término/paréntesis a continuación
                 term = terminos.pop(0)
                 if term == '(':  # Detecta subquery después de NOT, llamando otra vez al manejador de subqueries
-                    subquery = []
+                    subquery = ''
                     balance = 1
                     while terminos and balance > 0:
                         token = terminos.pop(0)
@@ -485,24 +478,21 @@ class SAR_Indexer:
                         elif token == ')':
                             balance -= 1
                         if balance > 0:
-                            subquery.append(token)
+                            subquery += ' ' + token
                     term = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery, la cual se acaba revirtiendo por el NOT
                 else:
                     term = self.get_posting(term)
                 aux = self.reverse_posting(term) # Se revierte la query por el NOT
         else:
-            print(f'Aux: {aux}')
             aux = self.get_posting(aux) #Como la primera palabra no es ni un paréntesis de apertura ni un NOT, se procesa como argumento
-        
         while len(terminos) > 0: # Mientras queden argumentos por procesar de la query, los proceso
-            print(f'Terminos iter: {terminos}')
             op = terminos.pop(0) # Sabemos que lo siguiente de un argumento tiene que ser un operador o un paréntesis que cierra
             if op == ')':  # Si encontramos el parentesis que cierre, termina la subquery, con lo que se procesa (esto solo afecta en la llamada recursiva)
                 break
             if op.upper() == 'NOT': #Procedimiento para un NOT, igual que antes
                 t = terminos.pop(0)
                 if t == '(':  # Detecta subquery después de NOT
-                    subquery = []
+                    subquery = ''
                     balance = 1
                     while terminos and balance > 0:
                         token = terminos.pop(0)
@@ -511,7 +501,7 @@ class SAR_Indexer:
                         elif token == ')':
                             balance -= 1
                         if balance > 0:
-                            subquery.append(token)
+                            subquery += ' ' + token
                     t = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
                 else:
                     t = self.get_posting(t)
@@ -519,7 +509,7 @@ class SAR_Indexer:
                 t = terminos.pop(0)
                 #En caso de no ser un not, sacamos el término a continuación del operador para realizar el AND o el OR de ambos
                 if t == '(':  # En caso de que el siguiente término sea una subquery, se procesa primero
-                    subquery = []
+                    subquery = ''
                     balance = 1
                     while terminos and balance > 0:
                         token = terminos.pop(0)
@@ -528,9 +518,9 @@ class SAR_Indexer:
                         elif token == ')':
                             balance -= 1
                         if balance > 0:
-                            subquery.append(token)
+                            subquery += ' ' + token
                     t = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
-                elif t == 'NOT':
+                elif t.upper() == 'NOT':
                     t = self.reverse_posting(self.get_posting(terminos.pop(0)))
                 else: 
                     t = self.get_posting(t)
