@@ -451,7 +451,7 @@ class SAR_Indexer:
         terminos = query.split()
         if len(terminos) == 0:
             return None
-        
+        print(f'Voy a hacer: {terminos}')
         aux = terminos.pop(0)
         if aux == '(':  # Detecta el inicio de una subquery
                 subquery = []
@@ -484,9 +484,11 @@ class SAR_Indexer:
                     term = self.get_posting(term)
                 aux = self.reverse_posting(term) # Se revierte la query por el NOT
         else:
+            print(f'Aux: {aux}')
             aux = self.get_posting(aux) #Como la primera palabra no es ni un paréntesis de apertura ni un NOT, se procesa como argumento
-            
+        
         while len(terminos) > 0: # Mientras queden argumentos por procesar de la query, los proceso
+            print(f'Terminos iter: {terminos}')
             op = terminos.pop(0) # Sabemos que lo siguiente de un argumento tiene que ser un operador o un paréntesis que cierra
             if op == ')':  # Si encontramos el parentesis que cierre, termina la subquery, con lo que se procesa (esto solo afecta en la llamada recursiva)
                 break
@@ -506,9 +508,9 @@ class SAR_Indexer:
                     t = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
                 else:
                     t = self.get_posting(t)
-                t = self.reverse_posting(t)
             else:
-                t = terminos.pop(0) #En caso de no ser un not, sacamos el término a continuación del operador para realizar el AND o el OR de ambos
+                t = terminos.pop(0)
+                #En caso de no ser un not, sacamos el término a continuación del operador para realizar el AND o el OR de ambos
                 if t == '(':  # En caso de que el siguiente término sea una subquery, se procesa primero
                     subquery = []
                     balance = 1
@@ -521,7 +523,9 @@ class SAR_Indexer:
                         if balance > 0:
                             subquery.append(token)
                     t = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
-                else:
+                elif t == 'NOT':
+                    t = self.reverse_posting(self.get_posting(terminos.pop(0)))
+                else: 
                     t = self.get_posting(t)
             
             if op.upper() == 'AND': #Aquí ya especificamos qué comportamiento tiene el AND y el OR
@@ -744,11 +748,11 @@ class SAR_Indexer:
         i=0
         j=0
         #recorremos las listas hasta que se acabe una de las dos
-        while i< len(p1) & j< len(p2):
+        while i< len(p1) and j< len(p2):
             #si los elementos coinciden los añadimos al resultado y aumentamos el valor
             #de las variables para iterar
             if p1[i] == p2[j]:
-                res.append[p1[i]]
+                res.append(p1[i])
                 i+=1
                 j+=1
             #si los elementos no son iguales, se aumenta el valor de la variable iteradora
@@ -783,27 +787,27 @@ class SAR_Indexer:
         i=0
         j=0
         #recorremos las listas hasta que se acabe una de las dos
-        while i< len(p1) & j< len(p2):
+        while i< len(p1) and j< len(p2):
             #si los elementos coinciden los añadimos al resultado y aumentamos el valor
             #de las variables para iterar
             if p1[i] == p2[j]:
-                res.append[p1[i]]
+                res.append(p1[i])
                 i+=1
                 j+=1
             #si no coinciden los valores añadimos a la lista resultado el elemento mas pequeño
             elif p1[i] < p2[j]:
-                res.append[p1[i]]
+                res.append(p1[i])
                 i+=1
             else:
-                res.append[p2[j]]
+                res.append(p2[j])
                 j+=1
         #para comprobar que no se queda ningun elemento de la lista por añadir, se recorre
         #los elementos restantes y se añaden a la lista resultado        
         while i<len(p1):
-            res.append[p1[i]]
+            res.append(p1[i])
             i+=1
         while j<len(p2):
-            res.append[p2[j]]
+            res.append(p2[j])
             j+=1            
         return res       
         ########################################
@@ -883,8 +887,7 @@ class SAR_Indexer:
                 else:
                     print(f'>>>>{query}\t{reference} != {result}<<<<')
                     errors = True                    
-            else:
-                print(query)
+
         return not errors
 
 
