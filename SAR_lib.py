@@ -416,14 +416,32 @@ class SAR_Indexer:
                 docs = self.index[x]
                 for doc in docs:
                     if doc not in res:
-                        res.append(doc)
-        return res            
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
+                        res.append(doc)          
+        
+        #FUNCIONALIDADES AMPLIADAS -> PARÉNTESIS
+        #BLANCA
+
+        while '(' in query or ')' in query:
+            ini = 0
+            end = 0
+
+            for i in range(len(query)):
+                if query[i] == '(':
+                    ini = i
+                elif query[i] == ')':
+                    end = i
+                    break
+            #we save subquery
+            subquery = query[ini + 1: end]
+
+            #Eliminate subquery from principal quary, except '('
+            query[ini + 1: end + 1]
+
+            #Calculate subquery + introduce result in original query
+            query[ini] = self.solve_query(subquery)
 
 
-
+        return res  
 
     def get_posting(self, term:str, field:Optional[str]=None):
         """
@@ -514,7 +532,7 @@ class SAR_Indexer:
 
         """
         #BLANCA
-        
+
         stem = self.stemmer.stem(term)
         res = []
 
