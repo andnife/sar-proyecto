@@ -320,7 +320,7 @@ class SAR_Wiki_Crawler:
             
             # De dicho elemento obtengo la URL a visitar y la profundidad
             depth = q[0]
-            url = f'{q[1]}{q[2]}'
+            url = q[2]
 
             '''
             Las URL de Wikipedia apuntan de manera local, es decir, al vincular otra pagina de wikipedia, ahorran poner la direccion del servidor
@@ -328,7 +328,8 @@ class SAR_Wiki_Crawler:
             De esta forma tratamos este caso antes de llamar a la funcion que obtiene la información de la página.
             Cualquier página que no apunte a Wikipedia no se vera afectada porque SI empezara con la direccion al servidor.
             '''
-            
+            if not url.startswith("https://"): 
+                url = f'https://es.wikipedia.org{url}'
             # Obtengo el contenido plano en texto y las URL de la URL a visitar
             wikientrycontent = self.get_wikipedia_entry_content(url)
             if wikientrycontent:
