@@ -848,25 +848,69 @@ class SAR_Indexer:
         ########################################################
     
     def snippets(self, text:str, query:str) -> List[str]:
+        #obtenemos todas la spalabras del texto en una lista y lo imso con las palabras de la query
         words = self.tokenize(text)
-        quer = self.tokenize(query)
-        
-        snp = '"'
-        for word in quer:
-            w = words
 
-            if w in words:
-                pos = words.index(word)
-                min_p = pos - 5
-                if min_p < 0:
-                    min_p = 0
-                max_p = pos+5
-                if max_p > len(words)-1:
-                    max_p = len(words)-1     
-                s_aux = ''
-                if min_p < len(words)-1:
-                    s_aux+= '...'
-                snp += s_aux    
+        #limpiamos los signos de la query
+        quer = query.replace('(', '')
+        quer = quer.replace(')', '')
+        quer = self.tokenize(quer)
+        
+        #creamos la base del snippet
+        snp = '"'
+        #iteramos cada palabra de la query, si es un operador se ignora
+        for word in quer:
+            if word not in ['AND','OR','NOT','and','or','not']:
+                w = words
+                #si la palabra esta en el texto, se guarda la primera posicion
+                if word in w:
+                    pos = w.index(word)
+                    #si la palabra estuviera repetida, se busca la siguiente ocurrencia
+                    if word in snp:
+        
+                        try:
+                            n_pos = w[pos+1:].index(word)
+                            n_pos += pos+1
+                        except ValueError:
+                            n_pos = -1
+                        #en caso de que no hubieran mas ocurrencias se devuelve el snipet
+                        if n_pos == -1:
+                            return snp
+                        else: 
+                            #si el termino no esta repetido en el snippet
+                            #se cogen los 4 primeros elementos anteriores y los cinco siguientes    
+                            min_p = n_pos - 4
+                            #comprobamos que no se haya salido fuera de la lista, y en caso afirmativo el minimo es 0
+                            if min_p < 0:
+                                min_p = 0
+                            max_p = n_pos+5
+                            #lo mismo en el caso contrario
+                            if max_p > len(words)-1:
+                                max_p = len(words)-1     
+                            s_aux = ''
+                            #si no estamos al principio del documento monemos puntos suspensivos
+                            #y añadimos el snippet creado a la variable resultado
+                            if min_p >0:
+                                s_aux+= '...' 
+                                s_aux += " ".join(w[min_p:max_p+1])  
+                    else:
+                        #la misma ejecucion pero cambia n_pos -> pos         
+                        min_p = pos - 4
+                        if min_p < 0:
+                            min_p = 0
+                        max_p = pos+5
+                        if max_p > len(words)-1:
+                            max_p = len(words)-1     
+                        s_aux = ''
+                        if min_p >0:
+                            s_aux+= '...'
+                        s_aux += " ".join(w[min_p:max_p+1])    
+                    
+                    #si no estamos al final del documento monemos puntos suspensivos
+                    if max_p < len(w) - 1:
+                        s_aux += '...'    
+                    snp += s_aux  
+                      
         return snp + '"'
 
 
@@ -929,9 +973,9 @@ class SAR_Indexer:
                 
                 for i in q:
                     tit = self.articles[i]
-                    txt = self.artcontent[i]
+                    txt = self.articles[i][2]
                     snp = self.snippets(txt,query)
-                    print(f"({i}): {tit[1]} -> {tit[0]}")
+                    print(f"({i}): {tit[0]}\n{tit[1]} \n\n{snp}\n")
                     print(snp)     
 
         elif self.show_snippet and not self.show_all:
@@ -941,10 +985,10 @@ class SAR_Indexer:
                 
                 for i in q[:9]:
                     tit = self.articles[i]
-                    txt = self.artcontent[i]
+                    txt = self.articles[i][2]
                     snp = self.snippets(txt,query)
-                    print(f"({i}): {tit[1]} -> {tit[0]}")
-                    print(snp)
+                    print(f"({i}): {tit[0]}\n{tit[1]} \n\n{snp}\n")
+    
 
         elif self.show_all:
             q = self.solve_query(query)
@@ -953,16 +997,16 @@ class SAR_Indexer:
 
             for i in q:
                 tit = self.articles[i]
-                print(f"({i}): {tit[1]} -> {tit[0]}")
+                print(f"({i}): {tit[0]}\n{tit[1]} \n\n{snp}\n")
 
         else :
             q = self.solve_query(query)
             print(q)
             res = len(q)
-            
+
             for i in q[:9]:
                 tit = self.articles[i]
-                print(f"({i}): {tit[1]} -> {tit[0]}")
+                print(f"({i}): {tit[0]}\n{tit[1]} \n\n{snp}\n")
         print("========================================")
         print(f"Query:{query}\n Nº de articulos recuperados:{res}\n")    
         
