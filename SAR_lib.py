@@ -44,6 +44,9 @@ class SAR_Indexer:
         """
         self.urls = set() # hash para las urls procesadas,
         self.index = {} # hash para el indice invertido de terminos --> clave: termino, valor: posting list
+        self.title = {}
+        self.sectionname = {}
+        self.summary = {}
         self.sindex = {} # hash para el indice invertido de stems --> clave: stem, valor: lista con los terminos que tienen ese stem
         self.ptindex = {} # hash para el indice permuterm.
         self.posindex = {} # hash para el indice posicional.
@@ -277,7 +280,32 @@ class SAR_Indexer:
                     if artId not in self.posindex[term]:
                         self.posindex[term] = {artId: positions}
                     
-            self.urls.add(j['url'])
+            self.urls.add(j['url'])#ALV
+            if self.multifield:
+                title = j['title']
+                titletokens = self.tokenize(title)
+                for token in titletokens: 
+                        term = token.lower()
+                        if term not in self.title:
+                            self.title[term] = []
+                        if artId not in self.title[term]:
+                            self.title[term].append(artId)
+                summary = j['summary']
+                summarytokens = self.tokenize(summary)
+                for token in summarytokens: 
+                        term = token.lower()
+                        if term not in self.summary:
+                            self.summary[term] = []
+                        if artId not in self.summary[term]:
+                            self.summary[term].append(artId)            
+                section = j['section-name']
+                sectiontokens = self.tokenize(section)
+                for token in sectiontokens: 
+                        term = token.lower()
+                        if term not in self.sectionname:
+                            self.sectionname[term] = []
+                        if artId not in self.sectionname[term]:
+                            self.sectionname[term].append(artId)
             
         # Invert index convertion
         terms = sorted(self.index.keys())
@@ -426,121 +454,81 @@ class SAR_Indexer:
     ###################################
 
 
-    def solve_query(self, query:str, prev:Dict={}):
+    def solve_query(self, query: str, prev: Dict = {}) -> List:
         """
         NECESARIO PARA TODAS LAS VERSIONES
-
         Resuelve una query.
         Debe realizar el parsing de consulta que sera mas o menos complicado en funcion de la ampliacion que se implementen
-
 
         param:  "query": cadena con la query
                 "prev": incluido por si se quiere hacer una version recursiva. No es necesario utilizarlo.
 
-
         return: posting list con el resultado de la query
-
         """
-        #ÁLVARO
-        #ADE
-        #IVÁN
-        print(f'antesdnada: {query}')
-        query = re.sub(r'(\()(\S)', r'\1 \2', query)
-        print(f'1: {query}')
-        query = re.sub(r'(\S)(\))', r'\1 \2', query)
-        print(f'2: {query}')
-        query = re.sub(r'(\))(\S)', r'\1 \2', query)
-        print(f'3: {query}')
-        query = re.sub(r'(\S)(\()', r'\1 \2', query)
-        print(f'4: {query}')
-        #Separamos los paréntesis del resto de elementos
-        
+        query = self._normalize_query(query)
         terminos = query.split()
-        if len(terminos) == 0:
+        if not terminos:
             return None
-        print(f'Voy a hacer: {terminos}')
+
+        result = self._parse_expression(terminos)
+        return result
+
+    def _normalize_query(self, query: str) -> str:
+        """Separa los paréntesis de los demás elementos en la consulta."""
+        query = re.sub(r'(\()(\S)', r'\1 \2', query)
+        query = re.sub(r'(\S)(\))', r'\1 \2', query)
+        query = re.sub(r'(\))(\S)', r'\1 \2', query)
+        query = re.sub(r'(\S)(\()', r'\1 \2', query)
+        return query
+
+    def _parse_expression(self, terminos: List[str]) -> List:
+        """Parses and evaluates the given list of terms."""
+        if not terminos:
+            return []
+
         aux = terminos.pop(0)
-        if aux == '(':  # Detecta el inicio de una subquery
-                subquery = []
-                balance = 1  # Balance de paréntesis para manejar subqueries anidadas
-                while terminos and balance > 0:
-                    token = terminos.pop(0)
-                    if token == '(':
-                        balance += 1
-                    elif token == ')':
-                        balance -= 1
-                    if balance > 0:
-                        subquery.append(token) #Añado elementos a la subquery para resolverla entera recursivamente
-                aux = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
-        
-        elif aux.upper() == 'NOT': #En caso de detectar un not, procesamos el término/paréntesis a continuación
-                term = terminos.pop(0)
-                if term == '(':  # Detecta subquery después de NOT, llamando otra vez al manejador de subqueries
-                    subquery = []
-                    balance = 1
-                    while terminos and balance > 0:
-                        token = terminos.pop(0)
-                        if token == '(':
-                            balance += 1
-                        elif token == ')':
-                            balance -= 1
-                        if balance > 0:
-                            subquery.append(token)
-                    term = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery, la cual se acaba revirtiendo por el NOT
-                else:
-                    term = self.get_posting(term)
-                aux = self.reverse_posting(term) # Se revierte la query por el NOT
+        if aux == '(':
+            aux = self._parse_subquery(terminos)
+        elif aux.upper() == 'NOT':
+            aux = self.reverse_posting(self._parse_term(terminos))
         else:
-            print(f'Aux: {aux}')
-            aux = self.get_posting(aux) #Como la primera palabra no es ni un paréntesis de apertura ni un NOT, se procesa como argumento
-        
-        while len(terminos) > 0: # Mientras queden argumentos por procesar de la query, los proceso
-            print(f'Terminos iter: {terminos}')
-            op = terminos.pop(0) # Sabemos que lo siguiente de un argumento tiene que ser un operador o un paréntesis que cierra
-            if op == ')':  # Si encontramos el parentesis que cierre, termina la subquery, con lo que se procesa (esto solo afecta en la llamada recursiva)
+            aux = self.get_posting(aux)
+
+        while terminos:
+            op = terminos.pop(0)
+            if op == ')':
                 break
-            if op.upper() == 'NOT': #Procedimiento para un NOT, igual que antes
-                t = terminos.pop(0)
-                if t == '(':  # Detecta subquery después de NOT
-                    subquery = []
-                    balance = 1
-                    while terminos and balance > 0:
-                        token = terminos.pop(0)
-                        if token == '(':
-                            balance += 1
-                        elif token == ')':
-                            balance -= 1
-                        if balance > 0:
-                            subquery.append(token)
-                    t = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
-                else:
-                    t = self.get_posting(t)
-            else:
-                t = terminos.pop(0)
-                #En caso de no ser un not, sacamos el término a continuación del operador para realizar el AND o el OR de ambos
-                if t == '(':  # En caso de que el siguiente término sea una subquery, se procesa primero
-                    subquery = []
-                    balance = 1
-                    while terminos and balance > 0:
-                        token = terminos.pop(0)
-                        if token == '(':
-                            balance += 1
-                        elif token == ')':
-                            balance -= 1
-                        if balance > 0:
-                            subquery.append(token)
-                    t = self.solve_query(subquery)  # Llama recursivamente para resolver la subquery
-                elif t == 'NOT':
-                    t = self.reverse_posting(self.get_posting(terminos.pop(0)))
-                else: 
-                    t = self.get_posting(t)
-            
-            if op.upper() == 'AND': #Aquí ya especificamos qué comportamiento tiene el AND y el OR
+            t = self._parse_term(terminos)
+            if op.upper() == 'AND':
                 aux = self.and_posting(aux, t)
             elif op.upper() == 'OR':
                 aux = self.or_posting(aux, t)
-        # Las queries se irán procesando de izquierda a derecha, filtrándose las posting lists intermedias progresivamente
-        return aux # Devolvemos la posting list final
+
+        return aux
+
+    def _parse_subquery(self, terminos: List[str]) -> List:
+        """Parses a subquery enclosed in parentheses."""
+        subquery = []
+        balance = 1
+        while terminos and balance > 0:
+            token = terminos.pop(0)
+            if token == '(':
+                balance += 1
+            elif token == ')':
+                balance -= 1
+            if balance > 0:
+                subquery.append(token)
+        return self.solve_query(' '.join(subquery))
+
+    def _parse_term(self, terminos: List[str]) -> List:
+        """Parses and evaluates a term which can be a simple term, NOT term, or a subquery."""
+        term = terminos.pop(0)
+        if term == '(':
+            return self._parse_subquery(terminos)
+        elif term.upper() == 'NOT':
+            return self.reverse_posting(self._parse_term(terminos))
+        else:
+            return self.get_posting(term)
 
 
     def get_posting(self, term:str, field:Optional[str]=None):
@@ -790,6 +778,7 @@ class SAR_Indexer:
         """
         #IVAN
         #creamos lista resultado y variables para iterar las listas
+
         res = []
         i=0
         j=0
@@ -815,7 +804,8 @@ class SAR_Indexer:
             i+=1
         while j<len(p2):
             res.append(p2[j])
-            j+=1            
+            j+=1
+  
         return res       
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
