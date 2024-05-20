@@ -386,21 +386,21 @@ class SAR_Indexer:
         for field,v in self.fields:
             if v:
                 print(f'\t# of tokens in \'{field}\': {len(self.index[field])}')
-                print('----------------------------------------')
+        print('----------------------------------------')
 
         #Permuterm
         if (self.permuterm):
             for field,v in self.fields:
                 if v:
                     print(f'\t# of tokens in \'{field}\': {len(self.ptindex[field])}')
-                    print('----------------------------------------')
+        print('----------------------------------------')
 
         #Stemming
         if (self.stemming):
             for field,v in self.fields:
                 if v:
                     print(f'\t# of tokens in \'{field}\': {len(self.sindex[field])}')
-                    print('----------------------------------------')
+        print('----------------------------------------')
 
         #Positional
         if (self.positional):
@@ -548,6 +548,12 @@ class SAR_Indexer:
         NECESARIO PARA TODAS LAS VERSIONES
 
         """
+        #BLANCA
+
+        #For stemming argument
+        if self.use_stemming:
+            return self.get_stemming(term)
+
         #IVAN
 
         ########################################
@@ -602,8 +608,7 @@ class SAR_Indexer:
                     del dict[t][d]
         
         # Miro en cada documento comun las posiciones de los terminos solicitados para ver si son consecutivas
-        print(dict)
-        pass
+        return dict
 
 
     def get_stemming(self, term:str, field: Optional[str]=None):
