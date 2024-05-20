@@ -256,7 +256,6 @@ class SAR_Indexer:
             self.articles[artId] = (j['url'], j['title'], j['all'])
 
             content = j['all']
-            self.artcontent[artId] = content
             tokens = self.tokenize(content)
             
             for token in tokens:
@@ -599,8 +598,6 @@ class SAR_Indexer:
         docs = dict[list[0]]
         for t in list[1:]:
             docs &= self.posindex[t]
-        
-        # Docs en comun entre todos los terminos
 
         # Elimino las entradas de documentos no compartidos del diccionario auxiliar 
         for t in list:
@@ -609,6 +606,9 @@ class SAR_Indexer:
                     del dict[t][d]
         
         # Miro en cada documento comun las posiciones de los terminos solicitados para ver si son consecutivas
+        print(dict)
+        exit()
+        
         return dict
 
 
