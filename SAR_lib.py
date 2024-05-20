@@ -418,8 +418,8 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        
-    #FUNCIONALIDADES AMPLIADAS -> PARÉNTESIS
+
+        #FUNCIONALIDADES AMPLIADAS -> PARÉNTESIS
         #BLANCA
 
         while '(' in query or ')' in query:
@@ -440,7 +440,6 @@ class SAR_Indexer:
 
             #Calculate subquery + introduce result in original query
             query[ini] = self.solve_query(subquery)
-
 
 
     def get_posting(self, term:str, field:Optional[str]=None):
