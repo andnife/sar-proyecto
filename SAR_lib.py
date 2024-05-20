@@ -850,6 +850,7 @@ class SAR_Indexer:
         ########################################################
     
     def snippets(self, text:str, query:str) -> List[str]:
+        #IVAN
         #obtenemos todas la spalabras del texto en una lista y lo imso con las palabras de la query
         words = self.tokenize(text)
 
