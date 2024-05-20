@@ -421,7 +421,6 @@ class SAR_Indexer:
         """
         #IVAN
         terminos = query.split()
-        operators = ['AND','OR']
         if len(terminos) == 0:
             return None
         
