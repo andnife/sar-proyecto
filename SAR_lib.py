@@ -440,12 +440,14 @@ class SAR_Indexer:
 
         """
         #ÁLVARO
+        #ADE
+        #IVÁN
         query = re.sub(r'(\()(\S)', r'\1 \2', query)
         query = re.sub(r'(\S)(\))', r'\1 \2', query)
         query = re.sub(r'(\))(\S)', r'\1 \2', query)
         query = re.sub(r'(\S)(\()', r'\1 \2', query)
         #Separamos los paréntesis del resto de elementos
-        #IVÁN
+        
         terminos = query.split()
         if len(terminos) == 0:
             return None
