@@ -50,7 +50,6 @@ class SAR_Indexer:
         self.sindex = {} # hash para el indice invertido de stems --> clave: stem, valor: lista con los terminos que tienen ese stem
         self.ptindex = {} # hash para el indice permuterm.
         self.posindex = {} # hash para el indice posicional.
-        self.artcontent = {} # hash para el indice posicional.
         self.docs = {} # diccionario de terminos --> clave: entero(docid),  valor: ruta del fichero.
         self.weight = {} # hash de terminos para el pesado, ranking de resultados.
         self.articles = {} # hash de articulos --> clave entero (artid), valor: la info necesaria para diferencia los artículos dentro de su fichero
@@ -314,7 +313,6 @@ class SAR_Indexer:
             invertedIndex[t] = self.index[t]
             
         self.index = invertedIndex
-
     def set_stemming(self, v:bool):
         """
 
@@ -602,6 +600,8 @@ class SAR_Indexer:
         for t in list[1:]:
             docs &= self.posindex[t]
         
+        # Docs en comun entre todos los terminos
+
         # Elimino las entradas de documentos no compartidos del diccionario auxiliar 
         for t in list:
             for d in list(self.posindex[t].keys()):
@@ -929,8 +929,7 @@ class SAR_Indexer:
                 
                 for i in q:
                     tit = self.articles[i]
-                    txt = self.artcontent[i]
-                    snp = self.snippets(txt,query)
+                    snp = self.snippets(query)
                     print(f"({i}): {tit[1]} -> {tit[0]}")
                     print(snp)     
 
@@ -941,8 +940,7 @@ class SAR_Indexer:
                 
                 for i in q[:9]:
                     tit = self.articles[i]
-                    txt = self.artcontent[i]
-                    snp = self.snippets(txt,query)
+                    snp = self.snippets(query)
                     print(f"({i}): {tit[1]} -> {tit[0]}")
                     print(snp)
 
