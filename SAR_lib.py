@@ -185,17 +185,6 @@ class SAR_Indexer:
                     if filename.endswith('.json'):
                         fullname = os.path.join(d, filename) #crea la ruta del archivo
                         self.index_file(fullname) #indexa el archivo con la ruta obtenida anteriormente
-            
-            print('========================================')
-            print(f'Number of indexed files: {len(self.docs.keys())}')
-            print('----------------------------------------')
-            print(f'Number of indexed articles: {len(self.articles.keys())}')
-            print('----------------------------------------')
-            print(f'TOKENS:')
-            #for key in j.keys():
-            #    print(f'\t# of tokens in \'{key}\': {len(j[key])}')
-            print('----------------------------------------')
-            print('========================================')
         else:
             print(f"ERROR:{root} is not a file nor directory!", file=sys.stderr)
             sys.exit(-1)
@@ -256,7 +245,7 @@ class SAR_Indexer:
         docId = len(self.docs) + 1
         self.docs[docId] = filename
 
-        for line in open(filename, encoding='utf-8', errors='replace'): # Enumerate no necesario
+        for line in open(filename, encoding='utf-8', errors='replace'):
             j = self.parse_article(line.strip())
             if self.already_in_index(j):
                 continue
@@ -382,12 +371,40 @@ class SAR_Indexer:
         Muestra estadisticas de los indices
         
         """
-        pass
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
+        print('========================================')
 
-        
+        # Indexed files
+        print(f'Number of indexed files: {len(self.docs)}')
+        print('----------------------------------------')
+
+        #Indexed articles
+        print(f'Number of indexed articles: {len(self.articles)}')
+        print('----------------------------------------')
+
+        #Tokens
+        print(f'TOKENS:')
+        for key in self.index.keys():
+           print(f'\t# of tokens in \'{key}\': {len(self.index[key])}')
+        print('----------------------------------------')
+
+        #Permuterm
+        if (self.permuterm):
+            for key in self.ptindex.keys():
+                print(f'\t# of tokens in \'{key}\': {len(self.ptindex[key])}')
+        print('----------------------------------------')
+
+        #Stemming
+        if (self.stemming):
+            for key in self.sindex.keys():
+                print(f'\t# of tokens in \'{key}\': {len(self.sindex[key])}')
+        print('----------------------------------------')
+
+        #Positional
+        if (self.positional):
+            print("Positional queries are allowed.")
+        else:
+            print("Positional queries are NOT allowed.")
+        print('========================================')
 
 
 
