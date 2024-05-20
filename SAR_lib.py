@@ -416,17 +416,19 @@ class SAR_Indexer:
         print('----------------------------------------')
 
         #Permuterm
+        print(f'PERMUTERMS:')
         if (self.permuterm):
             for field,v in self.fields:
                 if v:
-                    print(f'\t# of tokens in \'{field}\': {len(self.ptindex[field])}')
+                    print(f'\t# of permuterms in \'{field}\': {len(self.ptindex[field])}')
         print('----------------------------------------')
 
         #Stemming
+        print(f'STEMS:')
         if (self.stemming):
             for field,v in self.fields:
                 if v:
-                    print(f'\t# of tokens in \'{field}\': {len(self.sindex[field])}')
+                    print(f'\t# of stems in \'{field}\': {len(self.sindex[field])}')
         print('----------------------------------------')
 
         #Positional
