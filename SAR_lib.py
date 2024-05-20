@@ -47,6 +47,7 @@ class SAR_Indexer:
         self.sindex = {} # hash para el indice invertido de stems --> clave: stem, valor: lista con los terminos que tienen ese stem
         self.ptindex = {} # hash para el indice permuterm.
         self.posindex = {} # hash para el indice posicional.
+        self.artcontent = {} # hash para el indice posicional.
         self.docs = {} # diccionario de terminos --> clave: entero(docid),  valor: ruta del fichero.
         self.weight = {} # hash de terminos para el pesado, ranking de resultados.
         self.articles = {} # hash de articulos --> clave entero (artid), valor: la info necesaria para diferencia los artículos dentro de su fichero
@@ -253,6 +254,7 @@ class SAR_Indexer:
             self.articles[artId] = (j['url'], j['title'], j['all'])
 
             content = j['all']
+            self.artcontent[artId] = content
             tokens = self.tokenize(content)
             
             for token in tokens:
@@ -442,10 +444,15 @@ class SAR_Indexer:
         #ÁLVARO
         #ADE
         #IVÁN
+        print(f'antesdnada: {query}')
         query = re.sub(r'(\()(\S)', r'\1 \2', query)
+        print(f'1: {query}')
         query = re.sub(r'(\S)(\))', r'\1 \2', query)
+        print(f'2: {query}')
         query = re.sub(r'(\))(\S)', r'\1 \2', query)
+        print(f'3: {query}')
         query = re.sub(r'(\S)(\()', r'\1 \2', query)
+        print(f'4: {query}')
         #Separamos los paréntesis del resto de elementos
         
         terminos = query.split()
