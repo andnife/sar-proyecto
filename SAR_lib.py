@@ -50,7 +50,6 @@ class SAR_Indexer:
         self.sindex = {} # hash para el indice invertido de stems --> clave: stem, valor: lista con los terminos que tienen ese stem
         self.ptindex = {} # hash para el indice permuterm.
         self.posindex = {} # hash para el indice posicional.
-        self.artcontent = {} # hash para el indice posicional.
         self.docs = {} # diccionario de terminos --> clave: entero(docid),  valor: ruta del fichero.
         self.weight = {} # hash de terminos para el pesado, ranking de resultados.
         self.articles = {} # hash de articulos --> clave entero (artid), valor: la info necesaria para diferencia los artículos dentro de su fichero
@@ -257,7 +256,6 @@ class SAR_Indexer:
             self.articles[artId] = (j['url'], j['title'], j['all'])
 
             content = j['all']
-            self.artcontent[artId] = content
             tokens = self.tokenize(content)
             
             for token in tokens:
@@ -314,7 +312,6 @@ class SAR_Indexer:
             invertedIndex[t] = self.index[t]
             
         self.index = invertedIndex
-
     def set_stemming(self, v:bool):
         """
 
@@ -420,16 +417,18 @@ class SAR_Indexer:
 
         #Permuterm
         if (self.permuterm):
+            print(f'PERMUTERMS:')
             for field,v in self.fields:
                 if v:
-                    print(f'\t# of tokens in \'{field}\': {len(self.ptindex[field])}')
+                    print(f'\t# of permuterms in \'{field}\': {len(self.ptindex[field])}')
         print('----------------------------------------')
 
         #Stemming
         if (self.stemming):
+            print(f'STEMS:')
             for field,v in self.fields:
                 if v:
-                    print(f'\t# of tokens in \'{field}\': {len(self.sindex[field])}')
+                    print(f'\t# of stems in \'{field}\': {len(self.sindex[field])}')
         print('----------------------------------------')
 
         #Positional
@@ -601,7 +600,7 @@ class SAR_Indexer:
         docs = dict[list[0]]
         for t in list[1:]:
             docs &= self.posindex[t]
-        
+
         # Elimino las entradas de documentos no compartidos del diccionario auxiliar 
         for t in list:
             for d in list(self.posindex[t].keys()):
@@ -609,6 +608,9 @@ class SAR_Indexer:
                     del dict[t][d]
         
         # Miro en cada documento comun las posiciones de los terminos solicitados para ver si son consecutivas
+        print(dict)
+        exit()
+        
         return dict
 
 
