@@ -172,6 +172,7 @@ class SAR_Indexer:
         self.stemming = args['stem']
         self.permuterm = args['permuterm']
 
+
         file_or_dir = Path(root)
         
         if file_or_dir.is_file():
@@ -203,6 +204,11 @@ class SAR_Indexer:
         ## COMPLETAR PARA FUNCIONALIDADES EXTRA ##
         ##########################################
         
+        if self.stemming:
+            self.set_stemming(True)
+        
+        if self.use_stemming:
+            self.make_stemming
         
     def parse_article(self, raw_line:str) -> Dict[str, str]:
         """
