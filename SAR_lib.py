@@ -234,6 +234,8 @@ class SAR_Indexer:
 
         """
 
+        #BLANCA
+
         docId = len(self.docs) + 1
         self.docs[docId] = filename
 
@@ -318,7 +320,8 @@ class SAR_Indexer:
 
 
         """
-        
+        #BLANCA
+
         terms = list(self.index.keys())
         for term in terms:
             stemmed = self.stemmer.stem(term)
@@ -353,7 +356,7 @@ class SAR_Indexer:
             for i in range(len(termmod)):
                 termmod = termmod[i:] + termmod[:i]
                 self.ptindex[termmod] = self.index[term]
-        pass
+        #pass
 
     def show_stats(self):
         """
@@ -453,8 +456,6 @@ class SAR_Indexer:
             return[]
 
         #ampliar el metodo para aplicar las funcionalidades extra
-        pass
-
 
 
     def get_positionals(self, terms:str, index):
@@ -512,6 +513,7 @@ class SAR_Indexer:
         return: posting list
 
         """
+        #BLANCA
         
         stem = self.stemmer.stem(term)
         res = []
@@ -573,9 +575,6 @@ class SAR_Indexer:
         # Devuelvo la interseccion de las posting list obtenidas
         return self.and_posting(firsttermlist, secondtermlist)
         
-        pass
-
-
 
     def reverse_posting(self, p:list):
         """
