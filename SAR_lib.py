@@ -443,12 +443,6 @@ class SAR_Indexer:
             if op.upper() == 'OR':
                 aux = self.or_posting(aux, t)
 
-        return aux
-
-
-        ########################################
-        ## COMPLETAR PARA TODAS LAS VERSIONES ##
-        ########################################
 
         #FUNCIONALIDADES AMPLIADAS -> PARÉNTESIS
         #BLANCA
@@ -471,6 +465,8 @@ class SAR_Indexer:
 
             #Calculate subquery + introduce result in original query
             query[ini] = self.solve_query(subquery)
+
+        return aux
 
 
     def get_posting(self, term:str, field:Optional[str]=None):
