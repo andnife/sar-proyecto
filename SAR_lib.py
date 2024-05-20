@@ -44,6 +44,9 @@ class SAR_Indexer:
         """
         self.urls = set() # hash para las urls procesadas,
         self.index = {} # hash para el indice invertido de terminos --> clave: termino, valor: posting list
+        self.title = {}
+        self.sectionname = {}
+        self.summary = {}
         self.sindex = {} # hash para el indice invertido de stems --> clave: stem, valor: lista con los terminos que tienen ese stem
         self.ptindex = {} # hash para el indice permuterm.
         self.posindex = {} # hash para el indice posicional.
@@ -277,7 +280,32 @@ class SAR_Indexer:
                     if artId not in self.posindex[term]:
                         self.posindex[term] = {artId: positions}
                     
-            self.urls.add(j['url'])
+            self.urls.add(j['url'])#ALV
+            if self.multifield:
+                title = j['title']
+                titletokens = self.tokenize(title)
+                for token in titletokens: 
+                        term = token.lower()
+                        if term not in self.title:
+                            self.title[term] = []
+                        if artId not in self.title[term]:
+                            self.title[term].append(artId)
+                summary = j['summary']
+                summarytokens = self.tokenize(summary)
+                for token in summarytokens: 
+                        term = token.lower()
+                        if term not in self.summary:
+                            self.summary[term] = []
+                        if artId not in self.summary[term]:
+                            self.summary[term].append(artId)            
+                section = j['section-name']
+                sectiontokens = self.tokenize(section)
+                for token in sectiontokens: 
+                        term = token.lower()
+                        if term not in self.sectionname:
+                            self.sectionname[term] = []
+                        if artId not in self.sectionname[term]:
+                            self.sectionname[term].append(artId)
             
         # Invert index convertion
         terms = sorted(self.index.keys())
