@@ -778,6 +778,7 @@ class SAR_Indexer:
         """
         #IVAN
         #creamos lista resultado y variables para iterar las listas
+
         res = []
         i=0
         j=0
@@ -803,7 +804,8 @@ class SAR_Indexer:
             i+=1
         while j<len(p2):
             res.append(p2[j])
-            j+=1            
+            j+=1
+  
         return res       
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
