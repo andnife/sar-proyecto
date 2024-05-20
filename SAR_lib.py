@@ -856,8 +856,28 @@ class SAR_Indexer:
         ########################################################
         ## COMPLETAR PARA TODAS LAS VERSIONES SI ES NECESARIO ##
         ########################################################
+    
+    def snippets(self, text:str, query:str) -> List[str]:
+        words = self.tokenize(text)
+        quer = self.tokenize(query)
+        
+        snp = '"'
+        for word in quer:
+            w = words
 
-
+            if w in words:
+                pos = words.index(word)
+                min_p = pos - 5
+                if min_p < 0:
+                    min_p = 0
+                max_p = pos+5
+                if max_p > len(words)-1:
+                    max_p = len(words)-1     
+                s_aux = ''
+                if min_p < len(words)-1:
+                    s_aux+= '...'
+                snp += s_aux    
+        return snp + '"'
 
 
 
@@ -912,14 +932,49 @@ class SAR_Indexer:
         #IVAN
 
         print("========================================")
-        q = self.solve_query(query)
-        print(q)
-        res = len(q)
-        for i in q:
-            tit = self.articles[i]
-            print(f"({i}): {tit[1]} -> {tit[0]}")
+        if self.show_snippet and self.show_all:
+                q = self.solve_query(query)
+                print(q)
+                res = len(q)
+                
+                for i in q:
+                    tit = self.articles[i]
+                    txt = self.artcontent[i]
+                    snp = self.snippets(txt,query)
+                    print(f"({i}): {tit[1]} -> {tit[0]}")
+                    print(snp)     
+
+        elif self.show_snippet and not self.show_all:
+                q = self.solve_query(query)
+                print(q)
+                res = len(q)
+                
+                for i in q[:9]:
+                    tit = self.articles[i]
+                    txt = self.artcontent[i]
+                    snp = self.snippets(txt,query)
+                    print(f"({i}): {tit[1]} -> {tit[0]}")
+                    print(snp)
+
+        elif self.show_all:
+            q = self.solve_query(query)
+            print(q)
+            res = len(q)
+
+            for i in q:
+                tit = self.articles[i]
+                print(f"({i}): {tit[1]} -> {tit[0]}")
+
+        else :
+            q = self.solve_query(query)
+            print(q)
+            res = len(q)
+            
+            for i in q[:9]:
+                tit = self.articles[i]
+                print(f"({i}): {tit[1]} -> {tit[0]}")
         print("========================================")
-        print(f"Query:{query}\n Nº de articulos recuperados:{res}")
+        print(f"Query:{query}\n Nº de articulos recuperados:{res}\n")    
         
 
         ################
