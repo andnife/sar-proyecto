@@ -23,7 +23,7 @@ class SAR_Indexer:
     # lista de campos, el booleano indica si se debe tokenizar el campo
     # NECESARIO PARA LA AMPLIACION MULTIFIELD
     fields = [
-        ("all", True), ("title", False), ("summary", False), ("section-name", False), ('url', False),
+        ('all', True), ('title', True), ('summary', True), ('section-name', True), ('url', False),
     ]
     def_field = 'all'
     PAR_MARK = '%'
@@ -43,12 +43,28 @@ class SAR_Indexer:
 
         """
         self.urls = set() # hash para las urls procesadas,
-        self.index = {} # hash para el indice invertido de terminos --> clave: termino, valor: posting list
+        self.index = {
+            'all': {},
+            'title': {},
+            'summary': {},
+            'section-name': {}
+        } # hash para el indice invertido de terminos --> clave: termino, valor: posting list
         self.title = {}
         self.sectionname = {}
         self.summary = {}
-        self.sindex = {} # hash para el indice invertido de stems --> clave: stem, valor: lista con los terminos que tienen ese stem
-        self.ptindex = {} # hash para el indice permuterm.
+        self.sindex = {
+            'all': {},
+            'title': {},
+            'summary': {},
+            'section-name': {}
+        } # hash para el indice invertido de stems --> clave: stem, valor: lista con los terminos que tienen ese stem
+        self.ptindex = {
+            'all': {},
+            'title': {},
+            'summary': {},
+            'section-name': {},
+            'url': {}
+        } # hash para el indice permuterm.
         self.posindex = {} # hash para el indice posicional.
         self.docs = {} # diccionario de terminos --> clave: entero(docid),  valor: ruta del fichero.
         self.weight = {} # hash de terminos para el pesado, ranking de resultados.
@@ -202,6 +218,9 @@ class SAR_Indexer:
         if self.use_stemming:
             self.make_stemming
         
+        if self.permuterm:
+            self.make_permuterm
+        
     def parse_article(self, raw_line:str) -> Dict[str, str]:
         """
         Crea un diccionario a partir de una linea que representa un artículo del crawler
@@ -254,64 +273,64 @@ class SAR_Indexer:
                 continue
             artId = len(self.articles) + 1
             self.articles[artId] = (j['url'], j['title'], j['all'])
-
+            
             content = j['all']
             tokens = self.tokenize(content)
             
             for token in tokens:
                 term = token.lower()
-                if term not in self.index:
-                    self.index[term] = []
-                if artId not in self.index[term]:
-                    self.index[term].append(artId)
+                if term not in self.index['all']:
+                    self.index['all'][term] = []
+                if artId not in self.index['all'][term]:
+                    self.index['all'][term].append(artId)
                 if self.positional: # ADE
-                    temppos = 0
-                    positions = []
-                    while temppos != -1:
-                        temppos = content.find(term, temppos+1)
-                        if temppos != -1:
-                            positions.append(temppos)
-                            
                     if term not in self.posindex:
                         self.posindex[term] = []
-                        
                     if artId not in self.posindex[term]:
+                        positions = []
+                        for i in re.finditer(rf'\b[{term}]\b', content):
+                            positions.append(i.start())
                         self.posindex[term] = {artId: positions}
-                    
-            self.urls.add(j['url'])#ALV
+            
+            if self.stemming:
+                self.make_stemming()
+            if self.permuterm:
+                self.make_permuterm()
+
+            self.urls.add(j['url']) #ALV
             if self.multifield:
                 title = j['title']
                 titletokens = self.tokenize(title)
                 for token in titletokens: 
                         term = token.lower()
                         if term not in self.title:
-                            self.title[term] = []
-                        if artId not in self.title[term]:
-                            self.title[term].append(artId)
+                            self.index['title'][term] = []
+                        if artId not in self.index['title'][term]:
+                            self.index['title'][term].append(artId)
                 summary = j['summary']
                 summarytokens = self.tokenize(summary)
                 for token in summarytokens: 
                         term = token.lower()
                         if term not in self.summary:
-                            self.summary[term] = []
-                        if artId not in self.summary[term]:
-                            self.summary[term].append(artId)            
+                            self.index['summary'][term] = []
+                        if artId not in self.index['summary'][term]:
+                            self.index['summary'][term].append(artId)            
                 section = j['section-name']
                 sectiontokens = self.tokenize(section)
                 for token in sectiontokens: 
                         term = token.lower()
                         if term not in self.sectionname:
-                            self.sectionname[term] = []
-                        if artId not in self.sectionname[term]:
-                            self.sectionname[term].append(artId)
+                            self.index['section-name'][term] = []
+                        if artId not in self.index['section-name'][term]:
+                            self.index['section-name'][term].append(artId)
             
         # Invert index convertion
-        terms = sorted(self.index.keys())
+        terms = sorted(self.index['all'].keys())
         invertedIndex = {}
         for t in terms:
-            invertedIndex[t] = self.index[t]
+            invertedIndex[t] = self.index['all'][t]
             
-        self.index = invertedIndex
+        self.index['all'] = invertedIndex
     def set_stemming(self, v:bool):
         """
 
@@ -345,7 +364,7 @@ class SAR_Indexer:
     def make_stemming(self):
         """
 
-        Crea el indice de stemming (self.sindex) para los terminos de todos los indices.
+        Crea el indice de stemming (self.sindex['all']) para los terminos de todos los indices.
 
         NECESARIO PARA LA AMPLIACION DE STEMMING.
 
@@ -355,41 +374,101 @@ class SAR_Indexer:
         """
         #BLANCA
 
-        terms = list(self.index.keys())
+        terms = list(self.index['all'].keys())
         for term in terms:
             stemmed = self.stemmer.stem(term)
-            if stemmed not in self.sindex:
-                self.sindex[stemmed] = [term]
+            if stemmed not in self.sindex['all']:
+                self.sindex['all'][stemmed] = [term]
             else:
-                self.sindex[stemmed].append(term)
+                self.sindex['all'][stemmed].append(term)
+        
+        if self.multifield:
+            terms = list(self.index['title'].keys())
+            for term in terms:
+                stemmed = self.stemmer.stem(term)
+                if stemmed not in self.sindex['title']:
+                    self.sindex['title'][stemmed] = [term]
+                else:
+                    self.sindex['title'][stemmed].append(term)
+                    
+            terms = list(self.index['summary'].keys())
+            for term in terms:
+                stemmed = self.stemmer.stem(term)
+                if stemmed not in self.sindex['summary']:
+                    self.sindex['summary'][stemmed] = [term]
+                else:
+                    self.sindex['summary'][stemmed].append(term)
+                    
+            terms = list(self.index['section-name'].keys())
+            for term in terms:
+                stemmed = self.stemmer.stem(term)
+                if stemmed not in self.sindex['section-name']:
+                    self.sindex['section-name'][stemmed] = [term]
+                else:
+                    self.sindex['section-name'][stemmed].append(term)
 
 
     
     def make_permuterm(self):
         """
 
-        Crea el indice permuterm (self.ptindex) para los terminos de todos los indices.
+        Crea el indice permuterm (self.ptindex['all']) para los terminos de todos los indices.
 
         NECESARIO PARA LA AMPLIACION DE PERMUTERM
 
         """
         # ADE
-        
-        ####################################################
-        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE STEMMING ##
-        ####################################################
+
+        #####################################################
+        ## COMPLETAR PARA FUNCIONALIDAD EXTRA DE PERMUTERM ##
+        #####################################################
         
         # Itero cada termino de los indexados
-        for term in list(self.index.keys()):
+        for term in list(self.index['all'].keys()):
             # Añado el comodin al final y guardo la modificacion a la posting list del permuterm
             termmod = term + '*'
-            self.ptindex[termmod] = self.index[term]
+            self.ptindex['all'][termmod] = self.index['all'][term]
             
             # Voy a ir rotando el comodin y almacenando en la posting list del permuterm
             for i in range(len(termmod)):
                 termmod = termmod[i:] + termmod[:i]
-                self.ptindex[termmod] = self.index[term]
-        #pass
+                self.ptindex['all'][termmod] = self.index['all'][term]
+        
+        if self.multifield:
+            # Itero cada termino de los indexados
+            for term in list(self.index['title'].keys()):
+                # Añado el comodin al final y guardo la modificacion a la posting list del permuterm
+                termmod = term + '*'
+                self.ptindex['title'][termmod] = self.index['title'][term]
+                
+                # Voy a ir rotando el comodin y almacenando en la posting list del permuterm
+                for i in range(len(termmod)):
+                    termmod = termmod[i:] + termmod[:i]
+                    self.ptindex['title'][termmod] = self.index['title'][term]
+            
+            # Itero cada termino de los indexados
+            for term in list(self.index['summary'].keys()):
+                # Añado el comodin al final y guardo la modificacion a la posting list del permuterm
+                termmod = term + '*'
+                self.ptindex['summary'][termmod] = self.index['summary'][term]
+                
+                # Voy a ir rotando el comodin y almacenando en la posting list del permuterm
+                for i in range(len(termmod)):
+                    termmod = termmod[i:] + termmod[:i]
+                    self.ptindex['summary'][termmod] = self.index['summary'][term]
+                    
+            # Itero cada termino de los indexados
+            for term in list(self.index['section-name'].keys()):
+                # Añado el comodin al final y guardo la modificacion a la posting list del permuterm
+                termmod = term + '*'
+                self.ptindex['section-name'][termmod] = self.index['section-name'][term]
+                
+                # Voy a ir rotando el comodin y almacenando en la posting list del permuterm
+                for i in range(len(termmod)):
+                    termmod = termmod[i:] + termmod[:i]
+                    self.ptindex['section-name'][termmod] = self.index['section-name'][term]
+                    
+
 
     def show_stats(self):
         """
@@ -409,25 +488,43 @@ class SAR_Indexer:
         print('----------------------------------------')
 
         #Tokens
+
         print(f'TOKENS:')
-        for field,v in self.fields:
-            if v:
-                print(f'\t# of tokens in \'{field}\': {len(self.index[field])}')
+        if not self.multifield:
+                print(f'\t# of tokens in \'all\': {len(self.index["all"])}')
+        else:
+                print(f'\t# of tokens in \'all\': {len(self.index["all"])}')
+                print(f'\t# of tokens in \'title\': {len(self.index["title"])}')
+                print(f'\t# of tokens in \'summary\': {len(self.index["summary"])}')
+                print(f'\t# of tokens in \'section-name\': {len(self.index["section-name"])}')
+                print(f'\t# of tokens in \'url\': {len(self.urls)}')
         print('----------------------------------------')
 
         #Permuterm
         if (self.permuterm):
-            for field,v in self.fields:
-                if v:
-                    print(f'\t# of tokens in \'{field}\': {len(self.ptindex[field])}')
-        print('----------------------------------------')
+            print(f'PERMUTERM:')
+            if not self.multifield:
+                    print(f'\t# of tokens in \'all\': {len(self.ptindex["all"])}')
+            else:
+                    print(f'\t# of tokens in \'all\': {len(self.ptindex["all"])}')
+                    print(f'\t# of tokens in \'title\': {len(self.ptindex["title"])}')
+                    print(f'\t# of tokens in \'summary\': {len(self.ptindex["summary"])}')
+                    print(f'\t# of tokens in \'section-name\': {len(self.ptindex["section-name"])}')
+                    print(f'\t# of tokens in \'url\': {len(self.urls)}')
+            print('----------------------------------------')
 
         #Stemming
         if (self.stemming):
-            for field,v in self.fields:
-                if v:
-                    print(f'\t# of tokens in \'{field}\': {len(self.sindex[field])}')
-        print('----------------------------------------')
+            print(f'STEMS:')
+            if not self.multifield:
+                    print(f'\t# of tokens in \'all\': {len(self.sindex["all"])}')
+            else:
+                    print(f'\t# of tokens in \'all\': {len(self.sindex["all"])}')
+                    print(f'\t# of tokens in \'title\': {len(self.sindex["title"])}')
+                    print(f'\t# of tokens in \'summary\': {len(self.sindex["summary"])}')
+                    print(f'\t# of tokens in \'section-name\': {len(self.sindex["section-name"])}')
+                    print(f'\t# of tokens in \'url\': {len(self.urls)}')
+            print('----------------------------------------')
 
         #Positional
         if (self.positional):
@@ -557,10 +654,10 @@ class SAR_Indexer:
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
-        x = self.index
+        x = self.index['all']
 
         if term in x:
-            return self.index[term]
+            return self.index['all'][term]
         else:
             return[]
 
@@ -629,12 +726,12 @@ class SAR_Indexer:
         stem = self.stemmer.stem(term)
         res = []
 
-        if stem not in self.sindex:
+        if stem not in self.sindex['all']:
             return res
-        terms = list(self.sindex[stem])
+        terms = list(self.sindex['all'][stem])
 
         for t in range(len(terms)):
-            terms[t] = self.index[terms[t]]
+            terms[t] = self.index['all'][terms[t]]
 
         for t in range(len(terms)):
             res = self.or_posting(res, terms[t])
@@ -672,16 +769,16 @@ class SAR_Indexer:
         secondtermlist = []
         
         # Itero cada termino
-        for term in list(self.ptindex.keys()):
+        for term in list(self.ptindex['all'].keys()):
             # Si el termino obtenido de la lista de permuterm termina por la parte delantera
             # al comodin, añado la posting list
             if term.endswith(twoterms[0]):
-                secondtermlist.append(self.ptindex[term])
+                secondtermlist.append(self.ptindex['all'][term])
                 
             # Si el termino obtenido de la lista de permuterm empieza por la parte trasera
             # al comodin, añado la posting list
             if term.startswith(twoterms[1]):
-                firsttermlist.append(self.ptindex[term])
+                firsttermlist.append(self.ptindex['all'][term])
         
         # Devuelvo la interseccion de las posting list obtenidas
         return self.and_posting(firsttermlist, secondtermlist)
@@ -856,7 +953,7 @@ class SAR_Indexer:
             w = words
 
             if w in words:
-                pos = words.index(word)
+                pos = words.index['all'](word)
                 min_p = pos - 5
                 if min_p < 0:
                     min_p = 0
