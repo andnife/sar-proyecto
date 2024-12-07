@@ -56,8 +56,8 @@ def levenshtein_edicion(x, y, threshold=None):
 def levenshtein_reduccion(x, y, threshold=None):
     # completar versión reducción coste espacial y parada por threshold
     lenX, lenY = len(x), len(y)
-    v = np.zeros(lenX + 1, dtype=int)
-    vv = np.zeros(lenX + 1, dtype=int)
+    v = np.zeros(lenX + 1, dtype=int) # Current
+    vv = np.zeros(lenX + 1, dtype=int) # Previous
     v[0] = 0
 
     for i in range(1, lenX + 1): 
@@ -67,30 +67,38 @@ def levenshtein_reduccion(x, y, threshold=None):
         v, vv = vv, v
         v[0] = vv[0] + 1
         for i in range(1, lenX + 1):
-            v[i] = min(v[i - 1] + 1, vv[i] + 1, vv[i - 1] + (x[i - 1] != y[j - 1]),)
+            v[i] = min(
+                v[i - 1] + 1,
+                vv[i] + 1,
+                vv[i - 1] + (x[i - 1] != y[j - 1]),
+                )
      
     return v[lenX] # COMPLETAR Y REEMPLAZAR ESTA PARTE
 
 def levenshtein(x, y, threshold):
     # completar versiÃ³n reducciÃ³n coste espacial y parada por threshold
     lenX, lenY = len(x), len(y)
-    v = np.zeros(lenY + 1, dtype=int)
-    vv = np.zeros(lenY + 1, dtype=int)
-    for _ in range(0, lenY + 1): v[_] = _ 
+    v = np.zeros(lenX + 1, dtype=int)
+    vv = np.zeros(lenX + 1, dtype=int)
+    v[0] = 0
+    
+    for _ in range(1, lenX + 1): v[_] = v[_ - 1] + 1 
+
     i = 1
-    while(i < lenX + 1):
-        vv[0] = i
-        for j in range(1, lenY + 1):
-            vv[j] = min(
-                    v[j] + 1,
-                    vv[j - 1] + 1,
-                    v[j - 1] + (x[i - 1] != y[j - 1]),
+    while(i < lenY + 1):
+        v, vv = vv, v
+        v[0] = vv[0] + 1
+        for j in range(1, lenX + 1):
+            v[j] = min(
+                    v[j - 1] + 1,
+                    vv[j] + 1,
+                    vv[j - 1] + (x[j - 1] != y[i - 1]),
                 )
-            if min(vv) > threshold:
-                return threshold+1
-        i += 1
-        v = vv.copy()
-    return min(v[-1],threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
+        i += 1   
+        if min(v) > threshold:
+            return threshold+1
+        
+    return min(v[lenX],threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
 
 def levenshtein_cota_optimista(x, y, threshold):
     D = {}
