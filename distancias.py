@@ -294,32 +294,52 @@ def damerau_intermediate(x, y, threshold=None):
     # versión con reducción coste espacial y parada por threshold
     
     lenX, lenY = len(x), len(y)
-    v = np.zeros(lenY + 1, dtype=int)
-    vv = np.zeros(lenY + 1, dtype=int)
-    vvv = np.zeros(lenY + 1, dtype=int)
-    vvvv = np.zeros(lenY + 1, dtype=int)
-    for _ in range(0, lenY + 1): v[_] = _ 
+    v = np.zeros(lenX + 1, dtype=int)
+    vv = np.zeros(lenX + 1, dtype=int)
+    vvv = np.zeros(lenX + 1, dtype=int)
+    vvvv = np.zeros(lenX + 1, dtype=int)
+    v[0] = 0
+
+    for _ in range(1, lenX + 1): v[_] = v[_ - 1] + 1 
     
     i = 1
-    while(i < lenX + 1):
-        vv[0] = i
-        for j in range(1, lenY + 1):
-            vv[j] = min(
-                    v[j] + 1,
-                    vv[j - 1] + 1,
-                    v[j - 1] + (x[i - 1] != y[j - 1]),
-                    vvv[j - 2] + 1 if x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2] and (i > 1 and j > 1) else float('inf'),
-                    vvvv[j - 2] + 2 if x[i - 3] == y[j - 1] and (i > 2 and j > 1) else float('inf'),
-                    vvv[j - 3] + 2 if x[i - 1] == y[j - 3] and (i > 1 and j > 2) else float('inf')
+    while(i < lenY + 1):
+        v, vv, vvv, vvvv = vvvv, v, vv, vvv
+        v[0] = vv[0] + 1
+        for j in range(1, lenX + 1):
+            v[j] = min(
+                    v[j - 1] + 1,
+                    vv[j] + 1,
+                    vv[j - 1] + (x[j - 1] != y[i - 1]), 
+            )
+            if (j > 1 and i > 1)\
+                and (x[j - 2] == y[i - 1] and x[j - 1] == y[i - 2]):
+                v[j] = min(
+                    v[j],
+                    vvv[j - 2] + 1
                 )
-            if min(vv) > threshold:
-                return threshold+1
+            
+            # acb -> ba
+            if (j > 2 and i > 1)\
+                and (x[j - 3] == y[i - 1] and x[j - 1] == y[i - 2]):
+                v[j] = min(
+                    v[j],
+                    vvv[j - 3] + 2
+                )
+            
+            # ab -> bca
+            if (j > 1 and i > 2)\
+                and (x[j - 2] == y[i - 1] and x[j - 1] == y[i - 3]):
+                v[j] = min(
+                    v[j],
+                    vvvv[j - 2] + 2
+                )
         i += 1
-        vvvv = vvv.copy()
-        vvv = v.copy()
-        v = vv.copy()
         
-    return min(v[-1],threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
+        if min(v) > threshold:
+            return threshold+1
+        
+    return min(v[lenX],threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
 
 opcionesSpell = {
     'levenshtein_m': levenshtein_matriz,
