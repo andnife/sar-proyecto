@@ -1130,7 +1130,7 @@ class SAR_Indexer:
         #IVAN
         if use_spelling:
             vocabulary = list(self.index.keys())
-            self.speller = spellsuggester.SpellSuggester(siat_functions=distancias.opcionesSpell, vocab = vocabulary, default_distance = distance, default_threshold=threshold)
+            self.speller = spellsuggester.SpellSuggester(dist_functions=distancias.opcionesSpell, vocab = vocabulary, default_distance = distance, default_threshold=threshold)
         else:
             self.speller = None
 
