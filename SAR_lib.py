@@ -7,7 +7,8 @@ import math
 from pathlib import Path
 from typing import Optional, List, Union, Dict
 import pickle
-
+import distancias
+import spellsuggester
 class SAR_Indexer:
     """
     Prototipo de la clase para realizar la indexacion y la recuperacion de artículos de Wikipedia
@@ -75,6 +76,8 @@ class SAR_Indexer:
         self.show_snippet = False # valor por defecto, se cambia con self.set_snippet()
         self.use_stemming = False # valor por defecto, se cambia con self.set_stemming()
         self.use_ranking = False  # valor por defecto, se cambia con self.set_ranking()
+        self.use_spelling = False
+        self.speller = None
 
 
     ###############################
@@ -1114,6 +1117,22 @@ class SAR_Indexer:
         ################
 
 
+    def set_spelling(self, use_spelling:bool, distance:str=None, threshold:int=None):
+        """
+        self.use_spelling a True activa la corrección ortográfica
+        EN LAS PALABRAS NO ENCONTRADAS, en caso contrario NO utilizará
+        corrección ortográfica
+
+        input: "use_spell" booleano, determina el uso del corrector.
+                "distance" cadena, nombre de la función de distancia.
+                "threshold" entero, umbral del corrector
+        """
+        #IVAN
+        if use_spelling:
+            vocabulary = list(self.index.keys())
+            self.speller = spellsuggester.SpellSuggester(siat_functions=distancias.opcionesSpell, vocab = vocabulary, default_distance = distance, default_threshold=threshold)
+        else:
+            self.speller = None
 
 
 

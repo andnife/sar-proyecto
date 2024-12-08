@@ -1,12 +1,8 @@
 # version 1.1
 
-
 import argparse
-import pickle
-import sys
 
 from SAR_lib import SAR_Indexer
-
 
 if __name__ == "__main__":
 
@@ -40,6 +36,15 @@ if __name__ == "__main__":
     group1.add_argument('-T', '--test', dest='test', metavar= 'test', type=str, action='store',
                     help='file with queries and results, for testing.')
 
+
+    parser.add_argument('-t', '--threshold', dest='threshold', action='store', type=int, default=None, 
+                    help='threshold for the spelling correction.')
+    parser.add_argument('-d', '--distance', dest='distance', action='store', default=None, choices=['levenstein', 'damerau_r', 'damerau_i'],
+                    help='distance function for the spelling correction.')
+
+    parser.add_argument('-s', '--spell', dest='spell', action='store_true', default=False,
+                    help='activate spelling correction.')
+
     args = parser.parse_args()
 
     searcher = SAR_Indexer()
@@ -47,13 +52,9 @@ if __name__ == "__main__":
     searcher.set_stemming(args.stem)
     searcher.set_showall(args.all)
     searcher.set_snippet(args.snippet)
-
-    # se debe contar o mostrar resultados?
-    if args.count is True:
-        fnc = searcher.solve_and_count
-    else:
-        fnc = searcher.solve_and_show
-
+    searcher.set_spelling(args.spell or (args.distance is not None) or (args.threshold is not None),
+                          args.distance,
+                          args.threshold)
 
     if args.qlist is not None:
         # opt: -L, una lista de queries
