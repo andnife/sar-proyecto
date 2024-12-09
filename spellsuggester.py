@@ -76,13 +76,12 @@ class SpellSuggester:
         if threshold is None:
             threshold = self.default_threshold
 
-        ########################################
-        # COMPLETAR
-        ########################################
         algoritmo_distancia = distancias.opcionesSpell[distance]
-        res = [w for w in self.vocabulary if algoritmo_distancia(w,term,threshold=threshold)]
-
         resul = []
+        for t in range(1,threshold):
+            for w in self.vocabulary:
+                if algoritmo_distancia(w,term,threshold=t)==t:
+                    resul.append(w)
         if flatten:
             resul = [word for wlist in resul for word in wlist]
             
