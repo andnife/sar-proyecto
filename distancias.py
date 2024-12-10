@@ -119,7 +119,7 @@ def levenshtein_cota_optimista(x, y, threshold):
         if v > 0:
             pos += v
         elif v < 0:
-            neg += 0
+            neg += v
     cota = max(abs(pos), abs(neg))
     if cota < threshold:
         res = levenshtein(x, y, threshold) # si cota optimista < threshold => llamamos levenshtein
