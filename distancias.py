@@ -173,26 +173,34 @@ def damerau_restricted_edicion(x, y, threshold=None):
             )
     posX, posY = lenX-1, lenY-1
     while(posX >= 0 or posY >= 0):
-        if posX-1 > 0 and posY-1 > 0 and D[posX-1][posY-1] < D[posX+1][posY+1]:
+        if posX-1 >= 0 and posY-1 >= 0 and D[posX-1][posY-1] < D[posX+1][posY+1]:
             edicion.append((x[posX-1:posX+1], y[posY-1:posY+1]))
             posX-=2
             posY-=2
         elif D[posX][posY+1] < D[posX+1][posY+1]:
             # arriba
-            edicion.append((x[posX], y[posY]))
+            edicion.append((x[posX], ''))
             posX -= 1
         elif D[posX+1][posY] < D[posX+1][posY+1]:
             # izquierda
-            edicion.append((x[posX], y[posY]))
+            edicion.append(('', y[posY]))
             posY -= 1
         else:
             # diag
             if (x[posX] != y[posY]):
-                edicion.append((x[posX], ' '))
+                edicion.append((x[posX],y[posY]))
             else:
                 edicion.append((x[posX],y[posY]))
             posX -= 1
             posY -= 1
+    
+    while(posX>=0 and posY<0):
+        edicion.append((x[posX], ''))
+        posX -= 1
+
+    while(posY>=0 and posX<0):
+        edicion.append(('', y[posY]))
+        posY -= 1
     return D[lenX][lenY], edicion[::-1]
 
 def damerau_restricted(x, y, threshold=None):
@@ -220,7 +228,7 @@ def damerau_restricted(x, y, threshold=None):
         if min(v) > threshold:
             return threshold+1
 
-    return min(v[lenX],threshold+1) 
+    return min(v[lenX],threshold+1) # COMPLETAR Y REEMPLAZAR ESTA PARTE
 
 def damerau_intermediate_matriz(x, y, threshold=None):
     # versión Damerau-Levenstein intermedia con matriz
@@ -367,8 +375,8 @@ opcionesSpell = {
 }
 
 opcionesEdicion = {
-    'levenshtein': levenshtein_edicion,
+    # 'levenshtein': levenshtein_edicion,
     'damerau_r':   damerau_restricted_edicion,
-    'damerau_i':   damerau_intermediate_edicion
+    # 'damerau_i':   damerau_intermediate_edicion
 }
 
