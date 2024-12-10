@@ -68,15 +68,18 @@ class SpellSuggester:
             distance (str): nombre del algoritmo de búsqueda a utilizar
             threshold (int): threshold para limitar la búsqueda
         """
-        
+        # Establecer el valor predeterminado para distance y threshold
         if distance is None:
-            distance = self.default_distance
-        if distance not in distancias.opcionesSpell:
             distance = self.default_distance
         if threshold is None:
             threshold = self.default_threshold
-
+        # Verificar si el algoritmo de distancia es válido
+        if distance not in distancias.opcionesSpell:
+            distance = self.default_distance
+        
+        # Obtener el algoritmo de distancia correspondiente
         algoritmo_distancia = distancias.opcionesSpell[distance]
+
         resul = []
         for t in range(1,threshold+1):
             for w in self.vocabulary:
