@@ -268,26 +268,27 @@ def damerau_intermediate_edicion(x, y, threshold=None):
                 D[i][j - 1] + 1,
                 D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
                 D[i - 2][j - 2] + 1 if i > 1 and j > 1 and x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2] else float('inf'),
-                D[i - 3][j - 2] + 2 if x[i - 3] == y[j - 1] and i > 2 and j > 1 else float('inf'),
-                D[i - 2][j - 3] + 2 if x[i - 1] == y[j - 3] and i > 1 and j > 2 else float('inf'),
+                D[i - 3][j - 2] + 2 if i > 2 and j > 1 and x[i - 3] == y[j - 1]  else float('inf'),
+                D[i - 2][j - 3] + 2 if i > 1 and j > 2 and x[i - 1] == y[j - 3]  else float('inf'),
             )
     edicion = []
     posX, posY = lenX-1, lenY-1
-    while(posX >= 0 or posY >= 0):
-        if posX-2 >= 0 and posY-1 >= 0 and D[posX-2][posY-1] < D[posX+1][posY+1]:
-            #edicion.append(f'posX: {posX} | posY: {posY} {x[:posX]}{str.upper(x[posX])}{x[posX+1:]} | {y[:posY]}{str.upper(y[posY])}{y[posY+1:]}')
-            edicion.append((x[posX-1:posX+1],y[posY-2:posY+1]))
-            
-            posX-=3
-            posY-=2
-        elif posX-1 >= 0 and posY-2 >= 0 and D[posX-1][posY-2] < D[posX+1][posY+1]:
-            edicion.append((x[posX-1:posX+1],y[posY-2:posY+1]))
-            posX-=2
-            posY-=3
-        elif posX-1 >= 0 and posY-1 >= 0 and D[posX-1][posY-1] < D[posX+1][posY+1]:
+    while(posX >= 0 and posY >= 0):
+        if posX-1 >= 0 and posY-1 >= 0 and D[posX-1][posY-1] < D[posX][posY] and (x[posX]==y[posY-1] and x[posX-1]==y[posY]):
+            print((x[posX-1:posX+1], y[posY-1:posY+1]))
             edicion.append((x[posX-1:posX+1], y[posY-1:posY+1]))
             posX-=2
             posY-=2
+        elif posX-2 >= 0 and posY-1 >= 0 and D[posX-2][posY-1] < D[posX][posY] and (x[posX]==y[posY-1] and x[posX-2]==y[posY]):
+            print((x[posX-1:posX+1], y[posY-1:posY+1]))
+            edicion.append((x[posX-2:posX+1], y[posY-1:posY+1]))
+            posX-=3
+            posY-=2
+        elif posX-1 >= 0 and posY-2 >= 0 and D[posX-1][posY-2] < D[posX][posY] and (x[posX]==y[posY-2] and x[posX-1]==y[posY]):
+            print((x[posX-1:posX+1], y[posY-1:posY+1]))
+            edicion.append((x[posX-1:posX+1], y[posY-2:posY+1]))
+            posX-=2
+            posY-=3
         elif D[posX][posY+1] < D[posX+1][posY+1]:
             # arriba
             edicion.append((x[posX], ''))
@@ -304,13 +305,13 @@ def damerau_intermediate_edicion(x, y, threshold=None):
                 edicion.append((x[posX],y[posY]))
             posX -= 1
             posY -= 1
-        while(posX>=0 and posY<0):
-            edicion.append((x[posX], ''))
-            posX -= 1
+    while(posX>=0 and posY<0):
+        edicion.append((x[posX], ''))
+        posX -= 1
 
-        while(posY>=0 and posX<0):
-            edicion.append(('', y[posY]))
-            posY -= 1
+    while(posY>=0 and posX<0):
+        edicion.append(('', y[posY]))
+        posY -= 1
 
     return D[lenX][lenY], edicion[::-1]
     
