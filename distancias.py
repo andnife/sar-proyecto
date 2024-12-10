@@ -169,11 +169,12 @@ def damerau_restricted_edicion(x, y, threshold=None):
                 D[i - 1][j] + 1,
                 D[i][j - 1] + 1,
                 D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
-                D[i - 2][j - 2] + 1 if x[i - 2] == y[j - 1] and x[i - 1] == y[j - 2] and (i > 1 and j > 1) else float('inf'),
+                D[i - 2][j - 2] + 1 if (x[i - 2] == y[j - 1] and x[i-1] == y[j - 2]) and (i > 1 and j > 1) else float('inf'),
             )
     posX, posY = lenX-1, lenY-1
-    while(posX >= 0 or posY >= 0):
-        if posX-1 >= 0 and posY-1 >= 0 and D[posX-1][posY-1] < D[posX+1][posY+1]:
+    while(posX >= 0 and posY >= 0):
+        if posX-1 >= 0 and posY-1 >= 0 and D[posX-1][posY-1] < D[posX][posY] and (x[posX]==y[posY-1] and x[posX-1]==y[posY]):
+            print((x[posX-1:posX+1], y[posY-1:posY+1]))
             edicion.append((x[posX-1:posX+1], y[posY-1:posY+1]))
             posX-=2
             posY-=2
@@ -274,7 +275,7 @@ def damerau_intermediate_edicion(x, y, threshold=None):
     posX, posY = lenX-1, lenY-1
     while(posX >= 0 or posY >= 0):
         if posX-2 >= 0 and posY-1 >= 0 and D[posX-2][posY-1] < D[posX+1][posY+1]:
-            edicion.append(f'posX: {posX} | posY: {posY} {x[:posX]}{str.upper(x[posX])}{x[posX+1:]} | {y[:posY]}{str.upper(y[posY])}{y[posY+1:]}')
+            #edicion.append(f'posX: {posX} | posY: {posY} {x[:posX]}{str.upper(x[posX])}{x[posX+1:]} | {y[:posY]}{str.upper(y[posY])}{y[posY+1:]}')
             edicion.append((x[posX-1:posX+1],y[posY-2:posY+1]))
             
             posX-=3
@@ -376,7 +377,7 @@ opcionesSpell = {
 
 opcionesEdicion = {
     # 'levenshtein': levenshtein_edicion,
-    'damerau_r':   damerau_restricted_edicion,
-    # 'damerau_i':   damerau_intermediate_edicion
+    # 'damerau_r':   damerau_restricted_edicion,
+    'damerau_i':   damerau_intermediate_edicion
 }
 
