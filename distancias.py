@@ -32,25 +32,35 @@ def levenshtein_edicion(x, y, threshold=None):
                 D[i - 1][j - 1] + (x[i - 1] != y[j - 1]),
             )
 
+    print(D)
     posX, posY = lenX-1, lenY-1
-    while(posX >= 0 or posY >= 0):
+    while(posX >= 0 and posY >= 0):
         #print(f'posX: {posX} | posY: {posY}\n{x[:posX]}{str.upper(x[posX])}{x[posX+1:]} | {y[:posY]}{str.upper(y[posY])}{y[posY+1:]}')
         if D[posX][posY+1] < D[posX+1][posY+1]:
-            # arriba
-            edicion.append((x[posX], y[posY]))
+            # izq
+            edicion.append((x[posX], ''))
             posX -= 1
         elif D[posX+1][posY] < D[posX+1][posY+1]:
-            # izquierda
-            edicion.append((x[posX], y[posY]))
+            # der
+            edicion.append(('', y[posY]))
             posY -= 1
         else:
             # diag
             if (x[posX] != y[posY]):
-                edicion.append((x[posX], ' '))
+                edicion.append((x[posX],y[posY]))
             else:
                 edicion.append((x[posX],y[posY]))
             posX -= 1
             posY -= 1
+
+    while(posX>=0 and posY<0):
+        edicion.append((x[posX], ''))
+        posX -= 1
+
+    while(posY>=0 and posX<0):
+        edicion.append(('', y[posY]))
+        posY -= 1
+
     return D[lenX][lenY], edicion[::-1]
 
 def levenshtein_reduccion(x, y, threshold=None):
@@ -271,20 +281,28 @@ def damerau_intermediate_edicion(x, y, threshold=None):
             posY-=2
         elif D[posX][posY+1] < D[posX+1][posY+1]:
             # arriba
-            edicion.append((x[posX], y[posY]))
+            edicion.append((x[posX], ''))
             posX -= 1
         elif D[posX+1][posY] < D[posX+1][posY+1]:
             # izquierda
-            edicion.append((x[posX], y[posY]))
+            edicion.append(('', y[posY]))
             posY -= 1
         else:
             # diag
             if (x[posX] != y[posY]):
-                edicion.append((x[posX], ' '))
+                edicion.append((x[posX],y[posY]))
             else:
                 edicion.append((x[posX],y[posY]))
             posX -= 1
             posY -= 1
+        while(posX>=0 and posY<0):
+            edicion.append((x[posX], ''))
+            posX -= 1
+
+        while(posY>=0 and posX<0):
+            edicion.append(('', y[posY]))
+            posY -= 1
+
     return D[lenX][lenY], edicion[::-1]
     
 def damerau_intermediate(x, y, threshold=None):

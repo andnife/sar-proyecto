@@ -49,6 +49,8 @@ def comprobar_edicion():
             distancia, secuencia = funcion(original, nueva)
             print(f"\nComprobando si {nombre}({original},{nueva}) == {distancia}\noperaciones: {secuencia}")
             ok, dprima, reconstruida = aplicar_edicion(original, secuencia,True)
+            print(distancia,dprima)
+            print(nueva, reconstruida)
             if distancia == dprima and nueva == reconstruida:
                 print(f"CORRECTO!")
             else:
