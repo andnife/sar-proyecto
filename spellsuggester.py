@@ -78,12 +78,14 @@ class SpellSuggester:
 
         algoritmo_distancia = distancias.opcionesSpell[distance]
         resul = []
-        for t in range(1,threshold):
+        for t in range(1,threshold+1):
             for w in self.vocabulary:
-                if algoritmo_distancia(w,term,threshold=t)==t:
-                    resul.append(w)
-        if flatten:
-            resul = [word for wlist in resul for word in wlist]
-            
+                
+                if algoritmo_distancia(w,term,threshold=t)<=t:
+                     resul.append(w)
+        # if flatten:
+        #     resul = [word for wlist in resul for word in wlist]
+        # print(term)
+        # print(resul)    
         return resul
 

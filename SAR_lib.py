@@ -651,9 +651,16 @@ class SAR_Indexer:
         #For stemming argument
         if self.use_stemming:
             return self.get_stemming(term)
-
         #IVAN
-
+        if self.use_spelling and term not in self.speller.vocabulary:
+            suggestion = self.speller.suggest(term=term)
+            if suggestion != []:
+                res = []
+                for t in suggestion:
+                    if t in self.speller.vocabulary:
+                        res = self.or_posting(res, self.index[t])  
+                return res
+            return suggestion
         ########################################
         ## COMPLETAR PARA TODAS LAS VERSIONES ##
         ########################################
@@ -912,6 +919,7 @@ class SAR_Indexer:
         ########################################
 
 
+
     def minus_posting(self, p1, p2):
         """
         OPCIONAL PARA TODAS LAS VERSIONES
@@ -1128,6 +1136,7 @@ class SAR_Indexer:
                 "threshold" entero, umbral del corrector
         """
         #IVAN
+        self.use_spelling = use_spelling
         if use_spelling:
             vocabulary = list(self.index.keys())
             self.speller = spellsuggester.SpellSuggester(dist_functions=distancias.opcionesSpell, vocab = vocabulary, default_distance = distance, default_threshold=threshold)

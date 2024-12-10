@@ -377,8 +377,8 @@ opcionesSpell = {
 }
 
 opcionesEdicion = {
-    # 'levenshtein': levenshtein_edicion,
-    # 'damerau_r':   damerau_restricted_edicion,
+    'levenshtein': levenshtein_edicion,
+    'damerau_r':   damerau_restricted_edicion,
     'damerau_i':   damerau_intermediate_edicion
 }
 
